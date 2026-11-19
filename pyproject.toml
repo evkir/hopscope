@@ -29,3 +29,8 @@ Research = "https://doi.org/10.5281/zenodo.23513214"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/hopscope"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers -m 'not live'"
+markers = ["live: needs real network / Ollama; excluded by default"]
