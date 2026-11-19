@@ -1,0 +1,31 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "hopscope"
+version = "0.0.1"
+description = "Measurement range for mandate inflation (MIR) in multi-agent A2A delegation chains"
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.11"
+authors = [{ name = "Evgeny Kiryak", email = "evgeny@maseclab.com" }]
+classifiers = [
+  "Development Status :: 1 - Planning",
+  "Intended Audience :: Information Technology",
+  "Topic :: Security",
+  "Programming Language :: Python :: 3",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+hopscope = "hopscope.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/evkir/hopscope"
+Research = "https://doi.org/10.5281/zenodo.23513214"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/hopscope"]
