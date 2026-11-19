@@ -19,3 +19,8 @@ def test_cli_version_exits_zero(capsys: pytest.CaptureFixture[str]) -> None:
 
 def test_cli_no_args_returns_zero() -> None:
     assert main([]) == 0
+
+
+def test_cli_help_has_description(capsys: pytest.CaptureFixture[str]) -> None:
+    main([])
+    assert "hopscope command-line interface" in capsys.readouterr().out
