@@ -42,3 +42,17 @@ def test_mandate_allows() -> None:
 
 def test_mandate_str_is_sorted() -> None:
     assert str(Mandate.of("net:fetch:a", "fs:read:b")) == "fs:read:b, net:fetch:a"
+
+
+def test_mandate_excess_and_covers() -> None:
+    held = Mandate.of("fs:read:/workspace/*", "net:fetch:docs.example.com")
+    narrower = Mandate.of("fs:read:/workspace/a.txt")
+    wider = Mandate.of("fs:read:/workspace/*", "secrets:get:*")
+    assert held.covers(narrower) and held.excess(narrower) == frozenset()
+    assert held.excess(wider) == {Capability.parse("secrets:get:*")}
+    assert not held.covers(wider)
+    assert Mandate().covers(Mandate())
+
+
+def test_mandate_specs_sorted() -> None:
+    assert Mandate.of("net:fetch:a", "fs:read:b").specs() == ("fs:read:b", "net:fetch:a")
