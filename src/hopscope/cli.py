@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import asyncio
 
 from hopscope import __version__
 
@@ -10,6 +11,13 @@ from hopscope import __version__
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="hopscope", description=__doc__)
     parser.add_argument("--version", action="version", version=f"hopscope {__version__}")
-    parser.parse_args(argv)
+    sub = parser.add_subparsers(dest="command")
+    sub.add_parser("demo", help="run the deterministic L0 demo chain and print its trace")
+    args = parser.parse_args(argv)
+    if args.command == "demo":
+        from hopscope.range.demo import run_demo, summarize
+
+        print("\n".join(summarize(asyncio.run(run_demo()))))
+        return 0
     parser.print_help()
     return 0

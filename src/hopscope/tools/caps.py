@@ -60,5 +60,15 @@ class Mandate:
     def allows(self, required: Capability) -> bool:
         return any(c.covers(required) for c in self.caps)
 
+    def excess(self, requested: Mandate) -> frozenset[Capability]:
+        """Capabilities in ``requested`` this mandate does not cover (the inflation set)."""
+        return frozenset(c for c in requested.caps if not self.allows(c))
+
+    def covers(self, requested: Mandate) -> bool:
+        return not self.excess(requested)
+
+    def specs(self) -> tuple[str, ...]:
+        return tuple(str(c) for c in sorted(self.caps))
+
     def __str__(self) -> str:
-        return ", ".join(str(c) for c in sorted(self.caps))
+        return ", ".join(self.specs())
