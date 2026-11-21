@@ -31,9 +31,10 @@ DEMO_SCRIPT: dict[str, list[str]] = {
 }
 
 
-async def run_demo() -> RunResult:
+async def run_demo(transport: str = "inproc") -> RunResult:
     return await run_chain(
-        DEMO_INSTRUCTION, Mandate.of(*DEMO_ROOT), llm=ScriptedBackend(DEMO_SCRIPT), level=L0(), run_id="demo-0"
+        DEMO_INSTRUCTION, Mandate.of(*DEMO_ROOT), llm=ScriptedBackend(DEMO_SCRIPT), level=L0(), run_id="demo-0",
+        transport=transport,
     )
 
 
