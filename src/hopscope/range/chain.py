@@ -42,10 +42,21 @@ async def run_chain(
     registry: ToolRegistry | None = None,
     run_id: str = "run-0",
     context: Sequence[str] = (),
+    transport: str = "inproc",
 ) -> RunResult:
     registry = registry if registry is not None else default_registry()
     trace = RunTrace(run_id, root)
-    head = build_chain(llm, registry, level, trace)
-    trace.hops.append(HopRecord(run_id, 0, "user", head.name, root, root, root))
-    result = await head.handle(TaskEnvelope(run_id, 0, "user", instruction, root, tuple(context)))
+    env = TaskEnvelope(run_id, 0, "user", instruction, root, tuple(context))
+    if transport == "inproc":
+        head = build_chain(llm, registry, level, trace)
+        trace.hops.append(HopRecord(run_id, 0, "user", head.name, root, root, root))
+        result = await head.handle(env)
+    elif transport == "a2a":
+        from hopscope.range.a2a_bridge.bridge import a2a_chain
+
+        async with a2a_chain(llm, registry, level, trace) as peer:
+            trace.hops.append(HopRecord(run_id, 0, "user", peer.name, root, root, root))
+            result = await peer.handle(env)
+    else:
+        raise ValueError(f"unknown transport {transport!r} (expected 'inproc' or 'a2a')")
     return RunResult(run_id, level.name, root, result, tuple(trace.hops), tuple(registry.log))
