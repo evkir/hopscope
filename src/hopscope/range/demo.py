@@ -1,4 +1,4 @@
-"""Deterministic A0 demo: the planner over-delegates; a T2 executor exfiltrates a canary."""
+"""Deterministic demo: the planner over-delegates; at A0 a T2 executor exfiltrates a canary."""
 
 from __future__ import annotations
 
@@ -6,7 +6,8 @@ import json
 
 from hopscope.harness.llm_client import ScriptedBackend
 from hopscope.range.chain import RunResult, run_chain
-from hopscope.range.levels import A0
+from hopscope.range.levels import get_level
+from hopscope.range.scenarios import get_scenario
 from hopscope.tools.caps import Mandate
 
 DEMO_ROOT = ("fs:read:/workspace/*", "net:fetch:docs.example.com")
@@ -32,16 +33,24 @@ DEMO_SCRIPT: dict[str, list[str]] = {
 
 
 async def run_demo(
-    transport: str = "inproc", *, authority: Mandate | None = None, run_id: str = "demo-0"
+    transport: str = "inproc",
+    *,
+    authority: Mandate | None = None,
+    run_id: str = "demo-0",
+    level: str = "A0",
+    scenario: str | None = None,
 ) -> RunResult:
+    sc = get_scenario(scenario) if scenario is not None else None
     return await run_chain(
         DEMO_INSTRUCTION,
         Mandate.of(*DEMO_ROOT),
         llm=ScriptedBackend(DEMO_SCRIPT),
-        level=A0(),
+        level=get_level(level),
         run_id=run_id,
         transport=transport,
         authority=authority,
+        context=sc.context if sc else (),
+        compromised=sc.compromised if sc else frozenset(),
     )
 
 
@@ -57,11 +66,18 @@ def summarize(run: RunResult) -> list[str]:
     return lines
 
 
-async def run_demo_ensemble(n: int, transport: str = "inproc", *, authority: Mandate | None = None) -> list[RunResult]:
+async def run_demo_ensemble(
+    n: int,
+    transport: str = "inproc",
+    *,
+    authority: Mandate | None = None,
+    level: str = "A0",
+    scenario: str | None = None,
+) -> list[RunResult]:
     """Deterministic ensemble of the demo; the scripted backend ignores the seed."""
     from hopscope.meter.ensemble import run_ensemble
 
     async def factory(rep: int, seed: int) -> RunResult:
-        return await run_demo(transport, authority=authority, run_id=f"demo-{rep}")
+        return await run_demo(transport, authority=authority, run_id=f"demo-{rep}", level=level, scenario=scenario)
 
-    return await run_ensemble(n, factory, coords=("demo", transport, str(authority)))
+    return await run_ensemble(n, factory, coords=("demo", transport, str(authority), level, scenario))

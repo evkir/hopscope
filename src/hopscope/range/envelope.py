@@ -16,9 +16,10 @@ class TaskEnvelope:
     instruction: str
     mandate: Mandate
     context: tuple[str, ...] = ()
+    token: str | None = None
 
-    def child(self, sender: str, instruction: str, mandate: Mandate) -> TaskEnvelope:
-        return TaskEnvelope(self.run_id, self.hop + 1, sender, instruction, mandate, self.context)
+    def child(self, sender: str, instruction: str, mandate: Mandate, token: str | None = None) -> TaskEnvelope:
+        return TaskEnvelope(self.run_id, self.hop + 1, sender, instruction, mandate, self.context, token)
 
 
 @dataclass(frozen=True, slots=True)

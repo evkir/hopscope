@@ -56,3 +56,14 @@ def test_ensemble_without_valid_runs() -> None:
 def test_format_states_not_mir() -> None:
     out = format_ensemble(ensemble_metrics([rm(c=1)]))
     assert out.startswith("runs=1 valid=1 CIR=1.000") and out.endswith("(D7(i)-(ii) only; not MIR)")
+
+
+def test_exr_follows_execution_not_attempts() -> None:
+    from hopscope.range.levels import A0, A1
+    from test_levels_chain import run
+
+    a0, a1 = run_metrics(run(A0())), run_metrics(run(A1()))
+    assert (a0.candidates, a0.executed_candidates) == (2, 2)
+    assert (a1.candidates, a1.executed_candidates) == (2, 0)
+    m = ensemble_metrics([a0, a1])
+    assert m.cir == 1.0 and m.exr == 0.5 and "EXR=0.500" in format_ensemble(m)

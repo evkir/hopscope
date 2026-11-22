@@ -90,12 +90,18 @@ async def expose(stack: AsyncExitStack, agent: Peer) -> A2APeer:
 
 @asynccontextmanager
 async def a2a_chain(
-    llm: LLMBackend, registry: ToolRegistry, level: Level, trace: RunTrace, gate: Gate | None = None
+    llm: LLMBackend,
+    registry: ToolRegistry,
+    level: Level,
+    trace: RunTrace,
+    gate: Gate | None = None,
+    compromised: frozenset[str] = frozenset(),
 ) -> AsyncIterator[A2APeer]:
     """Four hops, every edge (user->orchestrator included) over A2A JSON-RPC, no sockets."""
     async with AsyncExitStack() as stack:
         executor = Agent(Role.EXECUTOR.value, Role.EXECUTOR, llm, level, trace, registry=registry, gate=gate)
         peer = await expose(stack, executor)
         for role in (Role.WORKER, Role.PLANNER, Role.ORCHESTRATOR):
-            peer = await expose(stack, Agent(role.value, role, llm, level, trace, downstream=peer))
+            agent = Agent(role.value, role, llm, level, trace, downstream=peer, compromised=role.value in compromised)
+            peer = await expose(stack, agent)
         yield peer

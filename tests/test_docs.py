@@ -27,3 +27,13 @@ def test_weights_in_doc_match_code() -> None:
 def test_readme_never_claims_mir() -> None:
     assert "CIR is not MIR" in README and "CIR is not MIR" in MAPPING
     assert "measures MIR" not in README
+
+
+def test_readme_matrix_is_generated_from_code() -> None:
+    import asyncio
+    import re
+
+    from hopscope.meter.matrix import format_matrix, run_matrix
+
+    m = re.search(r"<!-- matrix:start -->\n```text\n(.*?)\n```\n<!-- matrix:end -->", README, re.S)
+    assert m is not None and m.group(1) == format_matrix(asyncio.run(run_matrix(3)))
