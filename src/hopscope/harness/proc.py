@@ -89,7 +89,7 @@ def run_sealed(
     """subprocess.run() with a sealed environment. argv only, never a shell."""
     args = _check_argv(argv)
     env = sealed_env(allow=allow, extra=extra_env, home=home)
-    return subprocess.run(  # noqa: S603 — argv list, no shell, sealed env
+    return subprocess.run(
         args,
         cwd=str(cwd) if cwd else None,
         env=env,
@@ -114,7 +114,7 @@ def popen_sealed(
     """subprocess.Popen() with a sealed environment, for long-lived children."""
     args = _check_argv(argv)
     env = sealed_env(allow=allow, extra=extra_env, home=home)
-    return subprocess.Popen(  # noqa: S603 — argv list, no shell, sealed env
+    return subprocess.Popen(
         args,
         cwd=str(cwd) if cwd else None,
         env=env,

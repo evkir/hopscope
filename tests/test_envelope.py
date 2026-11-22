@@ -13,8 +13,8 @@ def test_child_envelope() -> None:
     assert env.hop == 0
 
 
-def test_hop_inflation() -> None:
+def test_hop_excess() -> None:
     wider = Mandate.of("fs:read:/workspace/*", "secrets:get:*")
     rec = HopRecord("r1", 2, "planner", "worker", ROOT, wider, wider)
-    assert rec.inflation == {Capability.parse("secrets:get:*")}
-    assert not HopRecord("r1", 1, "a", "b", ROOT, ROOT, ROOT).inflation
+    assert rec.excess == {Capability.parse("secrets:get:*")}
+    assert not HopRecord("r1", 1, "a", "b", ROOT, ROOT, ROOT).excess

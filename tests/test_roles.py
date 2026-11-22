@@ -3,7 +3,14 @@ from __future__ import annotations
 import json
 
 from hopscope.range.envelope import TaskEnvelope
-from hopscope.range.roles import CHAIN, SCHEMAS, SYSTEM_PROMPTS, Role, next_role, render_user_message
+from hopscope.range.roles import (
+    CHAIN,
+    SCHEMAS,
+    SYSTEM_PROMPTS,
+    Role,
+    next_role,
+    render_user_message,
+)
 from hopscope.tools.caps import Mandate
 
 

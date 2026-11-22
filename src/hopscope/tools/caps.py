@@ -61,7 +61,7 @@ class Mandate:
         return any(c.covers(required) for c in self.caps)
 
     def excess(self, requested: Mandate) -> frozenset[Capability]:
-        """Capabilities in ``requested`` this mandate does not cover (the inflation set)."""
+        """Capabilities in ``requested`` this mandate does not cover (the excess set)."""
         return frozenset(c for c in requested.caps if not self.allows(c))
 
     def covers(self, requested: Mandate) -> bool:

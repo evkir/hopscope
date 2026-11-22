@@ -2,7 +2,13 @@
 
 from __future__ import annotations
 
-from a2a.types import AgentCapabilities, AgentCard, AgentExtension, AgentInterface, AgentSkill
+from a2a.types import (
+    AgentCapabilities,
+    AgentCard,
+    AgentExtension,
+    AgentInterface,
+    AgentSkill,
+)
 
 from hopscope import __version__
 from hopscope.range.a2a_bridge.codec import MANDATE_EXT

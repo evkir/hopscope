@@ -3,10 +3,10 @@ from __future__ import annotations
 import asyncio
 
 import pytest
-from test_e2e_l0 import GOLDEN
 
 from hopscope.cli import main
 from hopscope.range.demo import run_demo, summarize
+from test_e2e_demo import GOLDEN
 
 
 def test_golden_trace_identical_over_a2a() -> None:
