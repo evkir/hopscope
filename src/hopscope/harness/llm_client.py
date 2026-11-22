@@ -290,9 +290,15 @@ def make_backend(
     *,
     script: Mapping[str, Sequence[str]] | None = None,
     ollama: OllamaConfig | None = None,
+    guard: bool = True,
 ) -> LLMBackend:
     if mode == "deterministic":
         return ScriptedBackend(script)
     if mode == "live":
-        return OllamaBackend(ollama)
+        backend = OllamaBackend(ollama)
+        if guard:
+            from hopscope.harness.gpu_guard import check_gpu_free
+
+            check_gpu_free(backend)
+        return backend
     raise ValueError(f"unknown mode {mode!r} (expected 'deterministic' or 'live')")

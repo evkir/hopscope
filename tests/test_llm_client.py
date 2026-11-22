@@ -163,6 +163,6 @@ def test_live_models_match_ppd_selection() -> None:
 
 def test_make_backend() -> None:
     assert isinstance(make_backend("deterministic"), ScriptedBackend)
-    assert isinstance(make_backend("live"), OllamaBackend)
+    assert isinstance(make_backend("live", guard=False), OllamaBackend)
     with pytest.raises(ValueError):
         make_backend("bogus")
