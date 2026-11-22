@@ -29,6 +29,9 @@ def main(argv: list[str] | None = None) -> int:
     run = sub.add_parser("run", help="run a deterministic ensemble of the demo and print CIR/ESR/EXR")
     run.add_argument("--n", type=int, default=10)
     _chain(run)
+    matrix = sub.add_parser("matrix", help="scenario x attenuation-level matrix of CIR/ESR/EXR")
+    matrix.add_argument("--n", type=int, default=10)
+    _base(matrix)
     args = parser.parse_args(argv)
     if args.command is None:
         parser.print_help()
@@ -43,6 +46,11 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.n < 1:
         parser.error("--n must be >= 1")
+    if args.command == "matrix":
+        from hopscope.meter.matrix import format_matrix, run_matrix
+
+        print(format_matrix(asyncio.run(run_matrix(args.n, transport=args.transport, authority=authority))))
+        return 0
     from hopscope.meter.metrics import ensemble_metrics, format_ensemble, run_metrics
 
     runs = asyncio.run(
