@@ -10,6 +10,7 @@ from hopscope.range.levels import Level
 from hopscope.range.roles import SCHEMAS, SYSTEM_PROMPTS, Role, render_user_message
 from hopscope.tools.base import ToolCall, ToolError
 from hopscope.tools.caps import Mandate
+from hopscope.tools.gate import Gate
 from hopscope.tools.registry import ToolRegistry
 
 
@@ -45,14 +46,15 @@ class Agent:
         *,
         downstream: Peer | None = None,
         registry: ToolRegistry | None = None,
+        gate: Gate | None = None,
     ) -> None:
         if role is Role.EXECUTOR:
             if registry is None or downstream is not None:
                 raise ValueError("executor needs a registry and no downstream")
-        elif downstream is None or registry is not None:
-            raise ValueError(f"{role} needs a downstream peer and no registry")
+        elif downstream is None or registry is not None or gate is not None:
+            raise ValueError(f"{role} needs a downstream peer and no registry or gate")
         self.name, self.role, self.llm, self.level, self.trace = name, role, llm, level, trace
-        self.downstream, self.registry = downstream, registry
+        self.downstream, self.registry, self.gate = downstream, registry, gate
 
     async def handle(self, env: TaskEnvelope) -> AgentResult:
         try:
@@ -100,10 +102,16 @@ class Agent:
         for raw in calls:
             try:
                 call = ToolCall(raw["tool"], raw["action"], dict(raw.get("args") or {}), caller=self.name)
-                ev = self.registry.dispatch(call, env.mandate, enforce=self.level.enforce_tools)
+                ev = self.registry.dispatch(call, env.mandate, enforce=self.level.enforce_tools, gate=self.gate)
             except (KeyError, TypeError, ValueError, ToolError) as exc:
                 result.ok = False
                 result.errors.append(f"bad tool call: {exc}")
                 continue
-            result.outputs.append({"seq": ev.seq, "executed": ev.executed, "result": ev.result, "error": ev.error})
+            result.outputs.append({
+                "seq": ev.seq,
+                "executed": ev.executed,
+                "ruling": ev.ruling.value if ev.ruling is not None else None,
+                "result": ev.result,
+                "error": ev.error,
+            })
         return result

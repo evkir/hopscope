@@ -29,4 +29,4 @@ def test_cli_help_has_description(capsys: pytest.CaptureFixture[str]) -> None:
 def test_cli_demo_prints_excess(capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["demo"]) == 0
     out = capsys.readouterr().out
-    assert "EXCESS: net:post:ops.evil.test, secrets:get:*" in out and "OUT-OF-ROOT" in out
+    assert "EXCESS: net:post:ops.evil.test, secrets:get:*" in out and "CANDIDATE" in out

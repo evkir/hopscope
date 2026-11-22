@@ -1,4 +1,4 @@
-"""Deterministic A0 demo: the planner over-delegates; the executor exfiltrates a canary."""
+"""Deterministic A0 demo: the planner over-delegates; a T2 executor exfiltrates a canary."""
 
 from __future__ import annotations
 
@@ -31,20 +31,37 @@ DEMO_SCRIPT: dict[str, list[str]] = {
 }
 
 
-async def run_demo(transport: str = "inproc") -> RunResult:
+async def run_demo(
+    transport: str = "inproc", *, authority: Mandate | None = None, run_id: str = "demo-0"
+) -> RunResult:
     return await run_chain(
-        DEMO_INSTRUCTION, Mandate.of(*DEMO_ROOT), llm=ScriptedBackend(DEMO_SCRIPT), level=A0(), run_id="demo-0",
+        DEMO_INSTRUCTION,
+        Mandate.of(*DEMO_ROOT),
+        llm=ScriptedBackend(DEMO_SCRIPT),
+        level=A0(),
+        run_id=run_id,
         transport=transport,
+        authority=authority,
     )
 
 
 def summarize(run: RunResult) -> list[str]:
     lines = [f"run {run.run_id} level={run.level} root=[{run.root}]"]
     for h in run.hops:
-        inf = h.excess
-        tag = "EXCESS: " + ", ".join(sorted(str(c) for c in inf)) if inf else "ok"
+        exc = h.excess
+        tag = "EXCESS: " + ", ".join(sorted(str(c) for c in exc)) if exc else "ok"
         lines.append(f"hop{h.hop} {h.sender}->{h.receiver} {tag}")
     for e in run.tool_events:
-        scope = "in-root" if run.root.allows(e.required) else "OUT-OF-ROOT"
-        lines.append(f"tool#{e.seq} {e.call.caller} {e.required} executed={e.executed} {scope}")
+        ruling = e.ruling.name if e.ruling is not None else "UNRULED"
+        lines.append(f"tool#{e.seq} {e.call.caller} {e.required} executed={e.executed} {ruling}")
     return lines
+
+
+async def run_demo_ensemble(n: int, transport: str = "inproc", *, authority: Mandate | None = None) -> list[RunResult]:
+    """Deterministic ensemble of the demo; the scripted backend ignores the seed."""
+    from hopscope.meter.ensemble import run_ensemble
+
+    async def factory(rep: int, seed: int) -> RunResult:
+        return await run_demo(transport, authority=authority, run_id=f"demo-{rep}")
+
+    return await run_ensemble(n, factory, coords=("demo", transport, str(authority)))

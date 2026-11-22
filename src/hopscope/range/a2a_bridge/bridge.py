@@ -29,6 +29,7 @@ from hopscope.range.agent import Agent, Peer
 from hopscope.range.envelope import AgentResult, RunTrace, TaskEnvelope
 from hopscope.range.levels import Level
 from hopscope.range.roles import Role
+from hopscope.tools.gate import Gate
 from hopscope.tools.registry import ToolRegistry
 
 
@@ -88,10 +89,12 @@ async def expose(stack: AsyncExitStack, agent: Peer) -> A2APeer:
 
 
 @asynccontextmanager
-async def a2a_chain(llm: LLMBackend, registry: ToolRegistry, level: Level, trace: RunTrace) -> AsyncIterator[A2APeer]:
+async def a2a_chain(
+    llm: LLMBackend, registry: ToolRegistry, level: Level, trace: RunTrace, gate: Gate | None = None
+) -> AsyncIterator[A2APeer]:
     """Four hops, every edge (user->orchestrator included) over A2A JSON-RPC, no sockets."""
     async with AsyncExitStack() as stack:
-        executor = Agent(Role.EXECUTOR.value, Role.EXECUTOR, llm, level, trace, registry=registry)
+        executor = Agent(Role.EXECUTOR.value, Role.EXECUTOR, llm, level, trace, registry=registry, gate=gate)
         peer = await expose(stack, executor)
         for role in (Role.WORKER, Role.PLANNER, Role.ORCHESTRATOR):
             peer = await expose(stack, Agent(role.value, role, llm, level, trace, downstream=peer))
