@@ -17,3 +17,19 @@ def test_get_level() -> None:
     assert isinstance(get_level("A0"), A0)
     with pytest.raises(ValueError, match="unknown level"):
         get_level("L9")
+
+
+def test_attenuate_keeps_only_covered() -> None:
+    from hopscope.range.levels import attenuate
+
+    held = Mandate.of("fs:read:/workspace/*", "secrets:get:api_key")
+    req = Mandate.of("fs:read:/workspace/a", "secrets:get:*", "net:post:x")
+    assert attenuate(held, req) == Mandate.of("fs:read:/workspace/a")
+
+
+def test_a1_attenuates_and_binds_tools() -> None:
+    from hopscope.range.levels import A1
+
+    held = Mandate.of("fs:read:/workspace/*")
+    assert A1().grant(held, Mandate.of("fs:read:/workspace/*", "secrets:get:*")) == held
+    assert A1.enforce_tools is True and isinstance(get_level("A1"), A1)
