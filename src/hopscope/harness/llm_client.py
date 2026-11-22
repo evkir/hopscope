@@ -4,7 +4,7 @@ Derived from CyberAI core/llm_client.py: the Ollama request shape (temperature,
 seed and num_ctx always sent), all-required schema widening and actionable 404
 errors. CyberAI's TrustGuard is deliberately NOT in this path: hopscope measures
 mandate inflation, and a guard in the LLM call would confound the measurement.
-Defences enter only through attenuation levels L1/L2.
+Defences enter only through attenuation levels A1/A2.
 """
 
 from __future__ import annotations

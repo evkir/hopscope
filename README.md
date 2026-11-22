@@ -7,7 +7,7 @@
 hopscope runs a reference multi-hop agent system (orchestrator → planner → worker → executor)
 with **simulated tools only** and measures how much authority grows at each delegation hop:
 MIR distribution over ensembles of runs, inflation rate λ_inf and trajectory divergence λ_div,
-across attenuation levels (L0 none · L1 scope string · L2 token exchange).
+across attenuation levels (A0 none · A1 scope string · A2 token exchange).
 
 Research basis: *Privilege-Differential Drift: Measuring Mandate Inflation in Hierarchical
 LLM Agent Systems* — [10.5281/zenodo.23513214](https://doi.org/10.5281/zenodo.23513214).

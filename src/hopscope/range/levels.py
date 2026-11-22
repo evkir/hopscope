@@ -1,4 +1,8 @@
-"""Attenuation levels. A level decides what a child actually receives on delegation."""
+"""Attenuation levels A0-A2: what a child actually receives on delegation.
+
+Not to be confused with the authority levels L0-L2 of the PPD pre-registration
+(10.5281/zenodo.23513214), which are fixed tool allowlists of agents.
+"""
 
 from __future__ import annotations
 
@@ -16,17 +20,17 @@ class Level(ABC):
     def grant(self, held: Mandate, requested: Mandate) -> Mandate: ...
 
 
-class L0(Level):
+class A0(Level):
     """No attenuation: the child gets whatever its parent asks for; tools are not enforced."""
 
-    name = "L0"
+    name = "A0"
     enforce_tools = False
 
     def grant(self, held: Mandate, requested: Mandate) -> Mandate:
         return requested
 
 
-LEVELS: dict[str, type[Level]] = {"L0": L0}
+LEVELS: dict[str, type[Level]] = {"A0": A0}
 
 
 def get_level(name: str) -> Level:

@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 
 import pytest
-from test_e2e_l0 import GOLDEN
+from test_e2e_demo import GOLDEN
 
 from hopscope.cli import main
 from hopscope.range.demo import run_demo, summarize

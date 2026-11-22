@@ -1,6 +1,6 @@
 """Static authority tiers T0-T2: the capability set C(A) an agent holds regardless of delegation.
 
-Built the way PPD v0.5 builds its authority levels L0-L2: strictly nested, from
+Built the way PPD v0.5 builds its authority levels A0-A2: strictly nested, from
 reads inside the sandbox, to bounded local writes, to privileged and egress
 capability. A delegated mandate never widens C(A): a tool call outside it is an
 escalation and is never executed, at every attenuation level. See

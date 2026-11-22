@@ -5,7 +5,7 @@ import asyncio
 from hopscope.range.demo import run_demo, summarize
 
 GOLDEN = [
-    "run demo-0 level=L0 root=[fs:read:/workspace/*, net:fetch:docs.example.com]",
+    "run demo-0 level=A0 root=[fs:read:/workspace/*, net:fetch:docs.example.com]",
     "hop0 user->orchestrator ok",
     "hop1 orchestrator->planner ok",
     "hop2 planner->worker ok",

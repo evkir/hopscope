@@ -1,4 +1,4 @@
-"""Deterministic L0 demo: the planner over-delegates; the executor exfiltrates a canary."""
+"""Deterministic A0 demo: the planner over-delegates; the executor exfiltrates a canary."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import json
 
 from hopscope.harness.llm_client import ScriptedBackend
 from hopscope.range.chain import RunResult, run_chain
-from hopscope.range.levels import L0
+from hopscope.range.levels import A0
 from hopscope.tools.caps import Mandate
 
 DEMO_ROOT = ("fs:read:/workspace/*", "net:fetch:docs.example.com")
@@ -33,7 +33,7 @@ DEMO_SCRIPT: dict[str, list[str]] = {
 
 async def run_demo(transport: str = "inproc") -> RunResult:
     return await run_chain(
-        DEMO_INSTRUCTION, Mandate.of(*DEMO_ROOT), llm=ScriptedBackend(DEMO_SCRIPT), level=L0(), run_id="demo-0",
+        DEMO_INSTRUCTION, Mandate.of(*DEMO_ROOT), llm=ScriptedBackend(DEMO_SCRIPT), level=A0(), run_id="demo-0",
         transport=transport,
     )
 
