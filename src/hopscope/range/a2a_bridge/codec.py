@@ -43,6 +43,7 @@ def envelope_to_message(env: TaskEnvelope) -> Message:
             "sender": env.sender,
             "mandate": list(env.mandate.specs()),
             "context": list(env.context),
+            **({"token": env.token} if env.token is not None else {}),
         }
     })
     msg.extensions.append(MANDATE_EXT)
@@ -66,7 +67,10 @@ def message_to_envelope(msg: Message) -> TaskEnvelope:
     except ValueError as exc:
         raise CodecError(f"bad mandate: {exc}") from exc
     context = tuple(_str_list(meta.get("context", []), "context"))
-    return TaskEnvelope(run_id, int(hop), sender, instruction, mandate, context)
+    token = meta.get("token")
+    if token is not None and not isinstance(token, str):
+        raise CodecError("token must be a string")
+    return TaskEnvelope(run_id, int(hop), sender, instruction, mandate, context, token)
 
 
 def _r2d(r: AgentResult) -> dict[str, Any]:

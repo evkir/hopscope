@@ -66,3 +66,14 @@ def test_card_declares_mandate_extension() -> None:
     card = card_for("worker")
     assert card.supported_interfaces[0].url == hop_url("worker") == "http://worker.hopscope.test/"
     assert card.capabilities.extensions[0].uri == MANDATE_EXT and not card.capabilities.streaming
+
+
+def test_token_survives_the_wire() -> None:
+    env = TaskEnvelope("r1", 2, "planner", "read it", Mandate(), (), "abc.def")
+    assert message_to_envelope(envelope_to_message(env)).token == "abc.def"
+    assert message_to_envelope(envelope_to_message(ENV)).token is None
+
+
+def test_non_string_token_rejected() -> None:
+    with pytest.raises(CodecError, match="token"):
+        message_to_envelope(_with_meta({**GOOD, "token": 5}))  # type: ignore[arg-type]

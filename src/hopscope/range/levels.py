@@ -16,6 +16,7 @@ from abc import ABC, abstractmethod
 from typing import ClassVar
 
 from hopscope.range.envelope import TaskEnvelope
+from hopscope.range.tokens import TokenService
 from hopscope.tools.caps import Mandate
 
 
@@ -68,3 +69,30 @@ def get_level(name: str) -> Level:
         return LEVELS[name]()
     except KeyError:
         raise ValueError(f"unknown level {name!r}; known: {sorted(LEVELS)}") from None
+
+
+class A2(Level):
+    name = "A2"
+    enforce_tools = True
+
+    def __init__(self, tokens: TokenService | None = None) -> None:
+        self.tokens = tokens if tokens is not None else TokenService()
+
+    def grant(self, held: Mandate, requested: Mandate) -> Mandate:
+        return attenuate(held, requested)
+
+    def root_token(self, run_id: str, root: Mandate, receiver: str) -> str | None:
+        return self.tokens.mint(run_id, 0, receiver, root)
+
+    def effective(self, env: TaskEnvelope, me: str) -> Mandate:
+        claims = self.tokens.verify(env.token, run_id=env.run_id, aud=me)
+        return claims if claims is not None else Mandate()
+
+    def delegate(
+        self, env: TaskEnvelope, sender: str, receiver: str, requested: Mandate
+    ) -> tuple[Mandate, str | None]:
+        granted = attenuate(self.effective(env, sender), requested)
+        return granted, self.tokens.mint(env.run_id, env.hop + 1, receiver, granted)
+
+
+LEVELS["A2"] = A2
