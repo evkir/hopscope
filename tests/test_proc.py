@@ -6,13 +6,19 @@ import sys
 
 import pytest
 
-from hopscope.harness.proc import DEFAULT_HOME, SealedEnvError, popen_sealed, run_sealed, sealed_env
+from hopscope.harness.proc import (
+    DEFAULT_HOME,
+    SealedEnvError,
+    popen_sealed,
+    run_sealed,
+    sealed_env,
+)
 
 DUMP_ENV = [sys.executable, "-c", "import json, os; print(json.dumps(dict(os.environ)))"]
 
 
 def test_provenance_sha_filled() -> None:
-    import hopscope.harness.proc as proc
+    from hopscope.harness import proc
 
     assert "@CYBERAI_SHA@" not in (proc.__doc__ or "")
 

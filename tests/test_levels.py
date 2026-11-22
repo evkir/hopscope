@@ -6,7 +6,7 @@ from hopscope.range.levels import L0, get_level
 from hopscope.tools.caps import Mandate
 
 
-def test_l0_grants_requested_even_if_inflated() -> None:
+def test_l0_grants_requested_even_beyond_held() -> None:
     held = Mandate.of("fs:read:/workspace/*")
     requested = Mandate.of("secrets:get:*")
     assert L0().grant(held, requested) == requested

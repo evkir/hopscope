@@ -49,7 +49,7 @@ def test_planner_fans_out_and_records_hops() -> None:
     res = asyncio.run(agent.handle(env()))
     assert res.ok and len(res.children) == 2
     assert [e.hop for e in sink.got] == [2, 2] and sink.got[1].mandate == Mandate.of("secrets:get:*")
-    assert [bool(h.inflation) for h in trace.hops] == [False, True]
+    assert [bool(h.excess) for h in trace.hops] == [False, True]
     assert {h.receiver for h in trace.hops} == {"sink"}
 
 

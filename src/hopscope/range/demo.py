@@ -1,4 +1,4 @@
-"""Deterministic L0 demo: the planner inflates its mandate; the executor exfiltrates a canary."""
+"""Deterministic L0 demo: the planner over-delegates; the executor exfiltrates a canary."""
 
 from __future__ import annotations
 
@@ -41,8 +41,8 @@ async def run_demo(transport: str = "inproc") -> RunResult:
 def summarize(run: RunResult) -> list[str]:
     lines = [f"run {run.run_id} level={run.level} root=[{run.root}]"]
     for h in run.hops:
-        inf = h.inflation
-        tag = "INFLATION: " + ", ".join(sorted(str(c) for c in inf)) if inf else "ok"
+        inf = h.excess
+        tag = "EXCESS: " + ", ".join(sorted(str(c) for c in inf)) if inf else "ok"
         lines.append(f"hop{h.hop} {h.sender}->{h.receiver} {tag}")
     for e in run.tool_events:
         scope = "in-root" if run.root.allows(e.required) else "OUT-OF-ROOT"

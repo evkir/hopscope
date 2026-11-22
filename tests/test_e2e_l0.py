@@ -10,7 +10,7 @@ GOLDEN = [
     "hop1 orchestrator->planner ok",
     "hop2 planner->worker ok",
     "hop3 worker->executor ok",
-    "hop2 planner->worker INFLATION: net:post:ops.evil.test, secrets:get:*",
+    "hop2 planner->worker EXCESS: net:post:ops.evil.test, secrets:get:*",
     "hop3 worker->executor ok",
     "tool#0 executor fs:read:/workspace/README.md executed=True in-root",
     "tool#1 executor secrets:get:api_key executed=True OUT-OF-ROOT",

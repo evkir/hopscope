@@ -34,7 +34,7 @@ class HopRecord:
     granted: Mandate
 
     @property
-    def inflation(self) -> frozenset[Capability]:
+    def excess(self) -> frozenset[Capability]:
         return self.held.excess(self.granted)
 
 

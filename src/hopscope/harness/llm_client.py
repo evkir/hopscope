@@ -127,14 +127,14 @@ class OllamaConfig:
 
 
 def urllib_transport(url: str, payload: dict[str, Any], timeout: float) -> tuple[int, bytes]:
-    req = urllib.request.Request(  # noqa: S310 — scheme validated in OllamaConfig
+    req = urllib.request.Request(
         url,
         data=json.dumps(payload).encode(),
         headers={"Content-Type": "application/json"},
         method="POST",
     )
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:  # noqa: S310
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
             return resp.status, resp.read()
     except urllib.error.HTTPError as exc:
         return exc.code, exc.read()
