@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 from typing import Any, ClassVar
 
 from hopscope.tools.caps import Capability, Domain
+from hopscope.tools.gate import Ruling
 
 
 class ToolError(Exception):
@@ -31,6 +32,7 @@ class ToolEvent:
     executed: bool
     result: Any = None
     error: str | None = None
+    ruling: Ruling | None = None
 
 
 def get_arg(call: ToolCall, key: str, typ: type = str) -> Any:
