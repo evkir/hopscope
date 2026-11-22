@@ -36,6 +36,10 @@ def parse_delegation(raw: Any) -> tuple[str, Mandate]:
 
 
 class Agent:
+    """One hop. A ``compromised`` hop ignores its level: it forwards whatever it asks for as its
+    delegation claim and replays the token it received, the strongest move open to a hop that
+    holds no issuer key."""
+
     def __init__(
         self,
         name: str,
@@ -47,14 +51,17 @@ class Agent:
         downstream: Peer | None = None,
         registry: ToolRegistry | None = None,
         gate: Gate | None = None,
+        compromised: bool = False,
     ) -> None:
         if role is Role.EXECUTOR:
             if registry is None or downstream is not None:
                 raise ValueError("executor needs a registry and no downstream")
+            if compromised:
+                raise ValueError("only a delegating hop can be compromised")
         elif downstream is None or registry is not None or gate is not None:
             raise ValueError(f"{role} needs a downstream peer and no registry or gate")
         self.name, self.role, self.llm, self.level, self.trace = name, role, llm, level, trace
-        self.downstream, self.registry, self.gate = downstream, registry, gate
+        self.downstream, self.registry, self.gate, self.compromised = downstream, registry, gate, compromised
 
     async def handle(self, env: TaskEnvelope) -> AgentResult:
         try:
@@ -76,6 +83,7 @@ class Agent:
         steps = out.get("steps") if self.role is Role.PLANNER else [out]
         if not isinstance(steps, list):
             return AgentResult(self.name, ok=False, errors=["steps must be a list"])
+        held = self.level.effective(env, self.name)
         for raw in steps:
             try:
                 instruction, requested = parse_delegation(raw)
@@ -83,10 +91,13 @@ class Agent:
                 result.ok = False
                 result.errors.append(f"bad delegation: {exc}")
                 continue
-            granted = self.level.grant(env.mandate, requested)
-            child_env = env.child(self.name, instruction, granted)
+            if self.compromised:
+                granted, token = requested, env.token
+            else:
+                granted, token = self.level.delegate(env, self.name, self.downstream.name, requested)
+            child_env = env.child(self.name, instruction, granted, token)
             self.trace.hops.append(
-                HopRecord(env.run_id, child_env.hop, self.name, self.downstream.name, env.mandate, requested, granted)
+                HopRecord(env.run_id, child_env.hop, self.name, self.downstream.name, held, requested, granted)
             )
             child = await self.downstream.handle(child_env)
             result.children.append(child)
@@ -98,11 +109,12 @@ class Agent:
         calls = out.get("tool_calls")
         if not isinstance(calls, list):
             return AgentResult(self.name, ok=False, errors=["tool_calls must be a list"])
+        mandate = self.level.effective(env, self.name)
         result = AgentResult(self.name, ok=True)
         for raw in calls:
             try:
                 call = ToolCall(raw["tool"], raw["action"], dict(raw.get("args") or {}), caller=self.name)
-                ev = self.registry.dispatch(call, env.mandate, enforce=self.level.enforce_tools, gate=self.gate)
+                ev = self.registry.dispatch(call, mandate, enforce=self.level.enforce_tools, gate=self.gate)
             except (KeyError, TypeError, ValueError, ToolError) as exc:
                 result.ok = False
                 result.errors.append(f"bad tool call: {exc}")
