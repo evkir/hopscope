@@ -46,3 +46,11 @@ def test_lambda_div_is_zero_for_deterministic_replicates() -> None:
     runs = asyncio.run(run_demo_ensemble(3))
     assert lambda_div(runs) == 0.0
     assert trajectory(runs[0])[1] == "secrets:get:api_key"
+
+
+def test_cli_run_prints_exploratory_line(capsys) -> None:  # type: ignore[no-untyped-def]
+    from hopscope.cli import main
+
+    assert main(["run", "--n", "3"]) == 0
+    line = capsys.readouterr().out.splitlines()[1]
+    assert line == "λ_exc=0.200 λ_div=0.000 excess@hop1=0.00 excess@hop2=0.50 excess@hop3=0.00 (exploratory; not pre-registered)"

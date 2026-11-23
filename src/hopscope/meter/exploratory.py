@@ -69,3 +69,11 @@ def mean_pairwise(trajectories: Sequence[Sequence[str]]) -> float | None:
 
 def lambda_div(runs: Sequence[RunResult]) -> float | None:
     return mean_pairwise([trajectory(r) for r in runs])
+
+
+def format_exploratory(runs: Sequence[RunResult]) -> str:
+    def f(x: float | None) -> str:
+        return "n/a" if x is None else f"{x:.3f}"
+
+    depth = " ".join(f"excess@hop{d}={v:.2f}" for d, v in excess_by_depth(runs).items())
+    return f"λ_exc={f(mean_lambda_exc(runs))} λ_div={f(lambda_div(runs))} {depth} (exploratory; not pre-registered)"
