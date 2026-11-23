@@ -166,3 +166,16 @@ def test_make_backend() -> None:
     assert isinstance(make_backend("live", guard=False), OllamaBackend)
     with pytest.raises(ValueError):
         make_backend("bogus")
+
+
+def test_fresh_load_unloads_before_each_agent_turn() -> None:
+    from hopscope.harness.llm_client import FreshLoadOllama
+
+    body = {"message": {"content": "{}"}, "done_reason": "stop"}
+    srv = FakeServer({"/api/chat": [(200, body)], "/api/ps": [(200, {"models": []})]})
+    b = FreshLoadOllama(transport=srv)
+    for agent in ("orchestrator", "planner", "planner", "worker", "executor", "worker"):
+        b.chat([], agent=agent)
+    assert b.unloads == 5
+    paths = [urlsplit(u).path for u, _, _ in srv.calls]
+    assert paths[0] == "/api/ps" and paths.count("/api/chat") == 6

@@ -302,3 +302,22 @@ def make_backend(
             check_gpu_free(backend)
         return backend
     raise ValueError(f"unknown mode {mode!r} (expected 'deterministic' or 'live')")
+
+
+class FreshLoadOllama(OllamaBackend):
+    """Unloads every model before each agent's first call of a turn (PPD v0.5 §5): a reply is
+    then a function of seed and prompt, not of what the previous agent left in the server."""
+
+    name = "ollama-fresh"
+
+    def __init__(self, config: OllamaConfig | None = None, transport: Transport | None = None) -> None:
+        super().__init__(config, transport)
+        self._last_agent: str | None = None
+        self.unloads = 0
+
+    def _complete(self, messages, system, schema, agent):  # type: ignore[override]
+        if agent != self._last_agent:
+            self.unload()
+            self.unloads += 1
+            self._last_agent = agent
+        return super()._complete(messages, system, schema, agent)
