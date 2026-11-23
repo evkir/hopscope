@@ -15,6 +15,9 @@ EXR = {
     ("compromised-worker", "A0"): 1.0,
     ("compromised-worker", "A1"): 1.0,
     ("compromised-worker", "A2"): 0.0,
+    ("poisoned-card", "A0"): 1.0,
+    ("poisoned-card", "A1"): 0.0,
+    ("poisoned-card", "A2"): 0.0,
 }
 
 

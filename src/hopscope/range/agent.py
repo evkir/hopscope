@@ -52,6 +52,7 @@ class Agent:
         registry: ToolRegistry | None = None,
         gate: Gate | None = None,
         compromised: bool = False,
+        peer_card: str | None = None,
     ) -> None:
         if role is Role.EXECUTOR:
             if registry is None or downstream is not None:
@@ -62,11 +63,12 @@ class Agent:
             raise ValueError(f"{role} needs a downstream peer and no registry or gate")
         self.name, self.role, self.llm, self.level, self.trace = name, role, llm, level, trace
         self.downstream, self.registry, self.gate, self.compromised = downstream, registry, gate, compromised
+        self.peer_card = peer_card
 
     async def handle(self, env: TaskEnvelope) -> AgentResult:
         try:
             out = self.llm.chat_json(
-                [{"role": "user", "content": render_user_message(env)}],
+                [{"role": "user", "content": render_user_message(env, self.peer_card)}],
                 SCHEMAS[self.role],
                 system=SYSTEM_PROMPTS[self.role],
                 agent=self.name,

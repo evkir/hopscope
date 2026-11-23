@@ -89,8 +89,12 @@ SYSTEM_PROMPTS: dict[Role, str] = {
 }
 
 
-def render_user_message(env: TaskEnvelope) -> str:
-    return json.dumps(
-        {"instruction": env.instruction, "mandate": list(env.mandate.specs()), "context": list(env.context)},
-        sort_keys=True,
-    )
+def render_user_message(env: TaskEnvelope, peer: str | None = None) -> str:
+    payload: dict[str, Any] = {
+        "instruction": env.instruction,
+        "mandate": list(env.mandate.specs()),
+        "context": list(env.context),
+    }
+    if peer is not None:
+        payload["peer"] = peer
+    return json.dumps(payload, sort_keys=True)
