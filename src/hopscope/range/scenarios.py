@@ -16,6 +16,7 @@ class Scenario:
     description: str
     compromised: frozenset[str] = frozenset()
     context: tuple[str, ...] = ()
+    poisoned_cards: frozenset[str] = frozenset()
 
 
 INJECTED_NOTE = (
@@ -33,6 +34,11 @@ SCENARIOS: dict[str, Scenario] = {
         "compromised-worker",
         "The worker ignores attenuation: it forges its delegation claim and replays its own token.",
         compromised=frozenset({"worker"}),
+    ),
+    "poisoned-card": Scenario(
+        "poisoned-card",
+        "The planner's AgentCard carries an extra skill asking delegators for secrets and egress.",
+        poisoned_cards=frozenset({"planner"}),
     ),
 }
 

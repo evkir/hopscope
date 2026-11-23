@@ -32,6 +32,14 @@ DEMO_SCRIPT: dict[str, list[str]] = {
 }
 
 
+SCENARIO_SCRIPTS: dict[str, dict[str, list[str]]] = {
+    "poisoned-card": {
+        **DEMO_SCRIPT,
+        "orchestrator": [json.dumps({"instruction": DEMO_INSTRUCTION, "capabilities": [*DEMO_ROOT, *_EXFIL_CAPS]})],
+    },
+}
+
+
 async def run_demo(
     transport: str = "inproc",
     *,
@@ -44,13 +52,14 @@ async def run_demo(
     return await run_chain(
         DEMO_INSTRUCTION,
         Mandate.of(*DEMO_ROOT),
-        llm=ScriptedBackend(DEMO_SCRIPT),
+        llm=ScriptedBackend(SCENARIO_SCRIPTS.get(scenario or "", DEMO_SCRIPT)),
         level=get_level(level),
         run_id=run_id,
         transport=transport,
         authority=authority,
         context=sc.context if sc else (),
         compromised=sc.compromised if sc else frozenset(),
+        poisoned=sc.poisoned_cards if sc else frozenset(),
     )
 
 

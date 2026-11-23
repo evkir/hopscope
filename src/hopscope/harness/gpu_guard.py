@@ -28,10 +28,14 @@ def lock_path() -> Path:
     return Path(os.environ.get(LOCK_ENV, DEFAULT_LOCK)).expanduser()
 
 
-def check_gpu_free(backend: HasLoadedModels, lock: Path | None = None) -> None:
+def check_lock(lock: Path | None = None) -> None:
     path = lock if lock is not None else lock_path()
     if path.exists():
         raise GPUBusy(f"{path} exists (PPD collection in progress); live mode refused")
+
+
+def check_gpu_free(backend: HasLoadedModels, lock: Path | None = None) -> None:
+    check_lock(lock)
     loaded = backend.loaded_models()
     if loaded:
         raise GPUBusy(f"Ollama already holds {', '.join(loaded)}; live mode will not share the GPU")

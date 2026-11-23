@@ -45,3 +45,13 @@ def test_make_backend_live_is_guarded(monkeypatch: pytest.MonkeyPatch, tmp_path:
     monkeypatch.setenv(LOCK_ENV, str(lock))
     with pytest.raises(GPUBusy):
         make_backend("live")
+
+
+def test_check_lock_alone(tmp_path: Path) -> None:
+    from hopscope.harness.gpu_guard import check_lock
+
+    check_lock(tmp_path / "absent")
+    lock = tmp_path / "ppd.lock"
+    lock.touch()
+    with pytest.raises(GPUBusy):
+        check_lock(lock)

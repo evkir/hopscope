@@ -17,7 +17,7 @@ from a2a.types import AgentCard, SendMessageRequest
 from starlette.applications import Starlette
 
 from hopscope.harness.llm_client import LLMBackend
-from hopscope.range.a2a_bridge.cards import card_for, hop_url
+from hopscope.range.a2a_bridge.cards import card_for, card_summary, hop_url
 from hopscope.range.a2a_bridge.codec import (
     CodecError,
     envelope_to_message,
@@ -81,8 +81,8 @@ class A2APeer:
             return AgentResult(self.name, ok=False, errors=[f"a2a codec: {exc}"])
 
 
-async def expose(stack: AsyncExitStack, agent: Peer) -> A2APeer:
-    card = card_for(agent.name)
+async def expose(stack: AsyncExitStack, agent: Peer, *, poisoned: bool = False) -> A2APeer:
+    card = card_for(agent.name, poisoned=poisoned)
     transport = httpx.ASGITransport(app=build_app(agent, card))
     http = await stack.enter_async_context(httpx.AsyncClient(transport=transport, base_url=hop_url(agent.name)))
     return A2APeer(card, http)
@@ -96,12 +96,17 @@ async def a2a_chain(
     trace: RunTrace,
     gate: Gate | None = None,
     compromised: frozenset[str] = frozenset(),
+    poisoned: frozenset[str] = frozenset(),
 ) -> AsyncIterator[A2APeer]:
-    """Four hops, every edge (user->orchestrator included) over A2A JSON-RPC, no sockets."""
+    """Four hops, every edge (user->orchestrator included) over A2A JSON-RPC, no sockets.
+    Each delegating hop reads the card its peer actually serves."""
     async with AsyncExitStack() as stack:
         executor = Agent(Role.EXECUTOR.value, Role.EXECUTOR, llm, level, trace, registry=registry, gate=gate)
-        peer = await expose(stack, executor)
+        peer = await expose(stack, executor, poisoned=Role.EXECUTOR.value in poisoned)
         for role in (Role.WORKER, Role.PLANNER, Role.ORCHESTRATOR):
-            agent = Agent(role.value, role, llm, level, trace, downstream=peer, compromised=role.value in compromised)
-            peer = await expose(stack, agent)
+            agent = Agent(
+                role.value, role, llm, level, trace,
+                downstream=peer, compromised=role.value in compromised, peer_card=card_summary(peer.card),
+            )
+            peer = await expose(stack, agent, poisoned=role.value in poisoned)
         yield peer

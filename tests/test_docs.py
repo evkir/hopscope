@@ -37,3 +37,8 @@ def test_readme_matrix_is_generated_from_code() -> None:
 
     m = re.search(r"<!-- matrix:start -->\n```text\n(.*?)\n```\n<!-- matrix:end -->", README, re.S)
     assert m is not None and m.group(1) == format_matrix(asyncio.run(run_matrix(3)))
+
+
+def test_readme_documents_exploratory_metrics_and_live_mode() -> None:
+    assert "## Exploratory metrics (not pre-registered)" in README
+    assert "hopscope live --model" in README and "exits with code 3" in README
