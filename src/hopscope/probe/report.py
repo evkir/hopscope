@@ -38,3 +38,25 @@ def reading_to_dict(card: ProbeCard, reading: CardReading | None = None) -> dict
             for s in reading.skills
         ],
     }
+
+
+def _safe(text: str) -> str:
+    """Card text is attacker-controlled: never let it reach a terminal with control sequences."""
+    return "".join(c if c.isprintable() else "?" for c in text)
+
+
+def format_report(d: dict[str, Any]) -> str:
+    def join(xs: list[str]) -> str:
+        return ", ".join(_safe(x) for x in xs) or "-"
+
+    lines = [
+        f"card {_safe(d['card'])}  tier {d['tier'] or '-'}  solicits {'YES' if d['solicits'] else 'no'}",
+        f"  urls:      {join(d['urls'])}",
+        f"  implied:   {join(d['implied'])}",
+        f"  solicited: {join(d['solicited'])}",
+        f"  oov:       {join(d['out_of_vocabulary'])}",
+    ]
+    for s in d["skills"]:
+        flag = "  SOLICITS" if s["solicits"] else ""
+        lines.append(f"  skill {_safe(s['id']):<24} tier {s['tier'] or '-'}{flag}")
+    return "\n".join(lines)

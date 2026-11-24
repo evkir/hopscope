@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import sys
+from typing import Any
 
 from hopscope import __version__
 from hopscope.harness.llm_client import LIVE_MODELS
@@ -45,6 +46,34 @@ def _live(args: argparse.Namespace) -> int:
     return 0
 
 
+#: Test hook: an httpx transport for ``probe`` (None means real HTTP to the checked target).
+_PROBE_TRANSPORT: Any = None
+
+
+def _probe(args: argparse.Namespace) -> int:
+    import json
+
+    import httpx
+
+    from hopscope.probe.card import CardError
+    from hopscope.probe.fetch import FetchError, fetch_card
+    from hopscope.probe.report import format_report, reading_to_dict
+    from hopscope.targets import KNOWN_LOCAL_TARGETS, TargetRefused
+
+    url = {t.name: t.card_url for t in KNOWN_LOCAL_TARGETS}.get(args.target, args.target)
+    try:
+        card = fetch_card(url, allow_remote=args.allow_remote, transport=_PROBE_TRANSPORT)
+    except TargetRefused as exc:
+        print(f"refused: {exc}", file=sys.stderr)
+        return 3
+    except (FetchError, CardError, httpx.HTTPError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 4
+    report = reading_to_dict(card)
+    print(json.dumps(report, indent=2) if args.json else format_report(report))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="hopscope", description=__doc__)
     parser.add_argument("--version", action="version", version=f"hopscope {__version__}")
@@ -64,10 +93,16 @@ def main(argv: list[str] | None = None) -> int:
     report.add_argument("--n", type=int, default=10)
     report.add_argument("--out", default="reports")
     _base(report)
+    probe = sub.add_parser("probe", help="read an external AgentCard into capabilities and a T0-T2 tier (local only)")
+    probe.add_argument("target", help="AgentCard URL or a known local target name (dvaa-a, dvaa-b)")
+    probe.add_argument("--allow-remote", action="store_true", help="only for systems you are authorised to test")
+    probe.add_argument("--json", action="store_true", help="print hopscope.probe/v1 JSON")
     args = parser.parse_args(argv)
     if args.command is None:
         parser.print_help()
         return 0
+    if args.command == "probe":
+        return _probe(args)
     from hopscope.range.demo import run_demo, run_demo_ensemble, summarize
     from hopscope.tools.authority import tier
 
