@@ -1,0 +1,12 @@
+# Deterministic range only. Live mode needs the host's Ollama and is never run in a container.
+services:
+  range:
+    build: .
+    image: hopscope:0.1.0
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
+    network_mode: none
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    tmpfs: ["/tmp"]
+    volumes: ["./reports:/out"]
