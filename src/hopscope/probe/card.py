@@ -85,6 +85,14 @@ def parse_card(doc: Any) -> ProbeCard:
     raw_skills = [] if raw_skills is None else raw_skills
     if not isinstance(raw_skills, list):
         raise CardError("skills must be a list")
+    legacy = doc.get("capabilities")
+    if not raw_skills and isinstance(legacy, list):
+        # Pre-1.0 / non-standard cards (DVAA's scenario agents) list capabilities as bare strings.
+        raw_skills = [
+            {"id": c, "name": c, "description": c.replace("-", " "), "tags": ["legacy-capability"]}
+            for c in legacy
+            if isinstance(c, str)
+        ]
     if len(raw_skills) > MAX_SKILLS:
         raise CardError(f"card lists {len(raw_skills)} skills, limit is {MAX_SKILLS}")
 
