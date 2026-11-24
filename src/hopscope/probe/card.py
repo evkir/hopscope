@@ -39,6 +39,7 @@ class ProbeCard:
     urls: tuple[str, ...]
     skills: tuple[ProbeSkill, ...]
     extensions: tuple[str, ...] = ()
+    source: str = "published"
 
 
 def _text(value: Any, field: str) -> str:

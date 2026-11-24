@@ -22,6 +22,8 @@ class Target:
     name: str
     card_url: str
     notes: str = ""
+    #: DVAA agent id: the card is synthesized from the dashboard's /agents API (no published card).
+    dvaa_agent: str = ""
 
 
 def check_target(url: str, *, allow_remote: bool = False) -> str:
@@ -39,8 +41,9 @@ def check_target(url: str, *, allow_remote: bool = False) -> str:
     raise TargetRefused(f"{host} is not local; pass allow_remote=True only for systems you are authorised to test")
 
 
-#: Local lab targets. Card paths follow A2A's well-known location; check them against your local build.
+#: Local lab targets. DVAA 0.9.2's A2A agents (:7020, :7021) publish no AgentCard (404 on both
+#: well-known paths), so their card is read from the dashboard API and marked as synthesized.
 KNOWN_LOCAL_TARGETS: tuple[Target, ...] = (
-    Target("dvaa-a", "http://127.0.0.1:7020/.well-known/agent-card.json", "Damn Vulnerable AI Agent, run locally"),
-    Target("dvaa-b", "http://127.0.0.1:7021/.well-known/agent-card.json", "Damn Vulnerable AI Agent, run locally"),
+    Target("dvaa-a", "http://127.0.0.1:9000/agents", "DVAA Orchestrator (:7020), run locally", "orchestrator"),
+    Target("dvaa-b", "http://127.0.0.1:9000/agents", "DVAA Worker Agent (:7021), run locally", "worker-1"),
 )

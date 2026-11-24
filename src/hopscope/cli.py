@@ -56,13 +56,18 @@ def _probe(args: argparse.Namespace) -> int:
     import httpx
 
     from hopscope.probe.card import CardError
+    from hopscope.probe.dvaa import fetch_dvaa_card
     from hopscope.probe.fetch import FetchError, fetch_card
     from hopscope.probe.report import format_report, reading_to_dict
     from hopscope.targets import KNOWN_LOCAL_TARGETS, TargetRefused
 
-    url = {t.name: t.card_url for t in KNOWN_LOCAL_TARGETS}.get(args.target, args.target)
+    known = {t.name: t for t in KNOWN_LOCAL_TARGETS}.get(args.target)
     try:
-        card = fetch_card(url, allow_remote=args.allow_remote, transport=_PROBE_TRANSPORT)
+        if known is not None and known.dvaa_agent:
+            card = fetch_dvaa_card(known.dvaa_agent, dashboard=known.card_url, transport=_PROBE_TRANSPORT)
+        else:
+            url = known.card_url if known is not None else args.target
+            card = fetch_card(url, allow_remote=args.allow_remote, transport=_PROBE_TRANSPORT)
     except TargetRefused as exc:
         print(f"refused: {exc}", file=sys.stderr)
         return 3

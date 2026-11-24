@@ -19,6 +19,7 @@ def reading_to_dict(card: ProbeCard, reading: CardReading | None = None) -> dict
     return {
         "schema": SCHEMA,
         "card": card.name,
+        "card_source": card.source,
         "urls": list(card.urls),
         "extensions": list(card.extensions),
         "tier": _tier(reading.tier),
@@ -50,7 +51,7 @@ def format_report(d: dict[str, Any]) -> str:
         return ", ".join(_safe(x) for x in xs) or "-"
 
     lines = [
-        f"card {_safe(d['card'])}  tier {d['tier'] or '-'}  solicits {'YES' if d['solicits'] else 'no'}",
+        f"card {_safe(d['card'])} [{_safe(d['card_source'])}]  tier {d['tier'] or '-'}  solicits {'YES' if d['solicits'] else 'no'}",
         f"  urls:      {join(d['urls'])}",
         f"  implied:   {join(d['implied'])}",
         f"  solicited: {join(d['solicited'])}",

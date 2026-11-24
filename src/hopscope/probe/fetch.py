@@ -8,6 +8,7 @@ and every URL the card advertises is checked too, because the card is attacker-c
 from __future__ import annotations
 
 import json
+from typing import Any
 
 import httpx
 
@@ -22,7 +23,7 @@ class FetchError(RuntimeError):
     """The card could not be fetched safely."""
 
 
-def fetch_card(url: str, *, allow_remote: bool = False, transport: httpx.BaseTransport | None = None) -> ProbeCard:
+def fetch_json(url: str, *, allow_remote: bool = False, transport: httpx.BaseTransport | None = None) -> Any:
     check_target(url, allow_remote=allow_remote)
     with httpx.Client(transport=transport, timeout=TIMEOUT_S, follow_redirects=False, trust_env=False) as client:
         with client.stream("GET", url, headers={"Accept": "application/json"}) as resp:
@@ -39,7 +40,11 @@ def fetch_card(url: str, *, allow_remote: bool = False, transport: httpx.BaseTra
         doc = json.loads(body)
     except ValueError as exc:
         raise CardError(f"{url} did not return JSON: {exc}") from exc
-    card = parse_card(doc)
+    return doc
+
+
+def fetch_card(url: str, *, allow_remote: bool = False, transport: httpx.BaseTransport | None = None) -> ProbeCard:
+    card = parse_card(fetch_json(url, allow_remote=allow_remote, transport=transport))
     for advertised in card.urls:
         check_target(advertised, allow_remote=allow_remote)
     return card

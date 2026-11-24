@@ -23,7 +23,7 @@ def serve(monkeypatch):
 
 def test_probe_known_target_json(serve, capsys):
     serve(CARD)
-    assert cli.main(["probe", "dvaa-b", "--json"]) == 0
+    assert cli.main(["probe", "http://127.0.0.1:7021/.well-known/agent-card.json", "--json"]) == 0
     d = json.loads(capsys.readouterr().out)
     assert (d["tier"], d["solicits"]) == ("T2", True)
 
