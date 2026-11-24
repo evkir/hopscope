@@ -56,6 +56,7 @@ def _probe(args: argparse.Namespace) -> int:
     import httpx
 
     from hopscope.probe.card import CardError
+    from hopscope.probe.discover import discover_card
     from hopscope.probe.dvaa import fetch_dvaa_card
     from hopscope.probe.fetch import FetchError, fetch_card
     from hopscope.probe.report import format_report, reading_to_dict
@@ -67,7 +68,8 @@ def _probe(args: argparse.Namespace) -> int:
             card = fetch_dvaa_card(known.dvaa_agent, dashboard=known.card_url, transport=_PROBE_TRANSPORT)
         else:
             url = known.card_url if known is not None else args.target
-            card = fetch_card(url, allow_remote=args.allow_remote, transport=_PROBE_TRANSPORT)
+            reader = fetch_card if url.endswith(".json") else discover_card
+            card = reader(url, allow_remote=args.allow_remote, transport=_PROBE_TRANSPORT)
     except TargetRefused as exc:
         print(f"refused: {exc}", file=sys.stderr)
         return 3
@@ -99,7 +101,7 @@ def main(argv: list[str] | None = None) -> int:
     report.add_argument("--out", default="reports")
     _base(report)
     probe = sub.add_parser("probe", help="read an external AgentCard into capabilities and a T0-T2 tier (local only)")
-    probe.add_argument("target", help="AgentCard URL or a known local target name (dvaa-a, dvaa-b)")
+    probe.add_argument("target", help="AgentCard URL (.json), agent base URL, or a known local target (dvaa-a, dvaa-b)")
     probe.add_argument("--allow-remote", action="store_true", help="only for systems you are authorised to test")
     probe.add_argument("--json", action="store_true", help="print hopscope.probe/v1 JSON")
     args = parser.parse_args(argv)

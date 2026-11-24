@@ -22,6 +22,10 @@ TIMEOUT_S = 5.0
 class FetchError(RuntimeError):
     """The card could not be fetched safely."""
 
+    def __init__(self, message: str, *, status: int | None = None) -> None:
+        super().__init__(message)
+        self.status = status
+
 
 def fetch_json(url: str, *, allow_remote: bool = False, transport: httpx.BaseTransport | None = None) -> Any:
     check_target(url, allow_remote=allow_remote)
@@ -30,7 +34,7 @@ def fetch_json(url: str, *, allow_remote: bool = False, transport: httpx.BaseTra
             if resp.is_redirect:
                 raise FetchError(f"{url} redirected to {resp.headers.get('location')!r}; redirects are not followed")
             if resp.status_code != 200:
-                raise FetchError(f"{url} returned HTTP {resp.status_code}")
+                raise FetchError(f"{url} returned HTTP {resp.status_code}", status=resp.status_code)
             body = bytearray()
             for chunk in resp.iter_bytes():
                 body += chunk
