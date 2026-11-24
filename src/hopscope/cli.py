@@ -60,6 +60,10 @@ def main(argv: list[str] | None = None) -> int:
     live.add_argument("--model", choices=tuple(m for m, _ in LIVE_MODELS), required=True)
     live.add_argument("--n", type=int, default=5)
     _chain(live)
+    report = sub.add_parser("report", help="write runs.jsonl, hopscope.sarif and report.html for the matrix")
+    report.add_argument("--n", type=int, default=10)
+    report.add_argument("--out", default="reports")
+    _base(report)
     args = parser.parse_args(argv)
     if args.command is None:
         parser.print_help()
@@ -78,6 +82,15 @@ def main(argv: list[str] | None = None) -> int:
         from hopscope.meter.matrix import format_matrix, run_matrix
 
         print(format_matrix(asyncio.run(run_matrix(args.n, transport=args.transport, authority=authority))))
+        return 0
+    if args.command == "report":
+        from pathlib import Path
+
+        from hopscope.report.build import build_report
+
+        paths = asyncio.run(build_report(Path(args.out), args.n, transport=args.transport, authority=authority))
+        for kind, path in paths.items():
+            print(f"{kind}: {path}")
         return 0
     if args.command == "live":
         return _live(args)

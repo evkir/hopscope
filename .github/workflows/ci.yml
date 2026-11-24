@@ -24,3 +24,10 @@ jobs:
       - run: pip install -e ".[dev]"
       - run: ruff check src tests
       - run: pytest -q
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: mkdir -p reports
+      - run: HOST_UID=$(id -u) HOST_GID=$(id -g) docker compose run --rm range
+      - run: test -s reports/report.html && test -s reports/hopscope.sarif && test -s reports/runs.jsonl
