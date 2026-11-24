@@ -42,3 +42,10 @@ def test_readme_matrix_is_generated_from_code() -> None:
 def test_readme_documents_exploratory_metrics_and_live_mode() -> None:
     assert "## Exploratory metrics (not pre-registered)" in README
     assert "hopscope live --model" in README and "exits with code 3" in README
+
+
+def test_readme_rules_match_sarif() -> None:
+    from hopscope.report.sarif import RULES
+
+    for rule in RULES:
+        assert f"| `{rule['id']}` | {rule['defaultConfiguration']['level']} |" in README

@@ -1,8 +1,10 @@
 # hopscope
 
+[![ci](https://github.com/evkir/hopscope/actions/workflows/ci.yml/badge.svg)](https://github.com/evkir/hopscope/actions/workflows/ci.yml)
+
 **Adversarial measurement range for authority creep in multi-hop A2A delegation chains.**
 
-> Status: pre-alpha. Part of [MASec Lab](https://maseclab.com). Companion to the
+> Status: alpha (v0.1.0). Part of [MASec Lab](https://maseclab.com). Companion to the
 > [PPD pre-registration](https://doi.org/10.5281/zenodo.23513214); see [docs/ppd-mapping.md](docs/ppd-mapping.md).
 
 hopscope runs a reference four-hop agent system (orchestrator → planner → worker → executor)
@@ -32,7 +34,9 @@ pip install -e ".[dev]"
 hopscope demo                     # trace of the deterministic A0 demo
 hopscope demo --transport a2a     # same trace, every hop over A2A JSON-RPC, no sockets
 hopscope demo --authority T1      # executor without egress: the leak becomes ESCALATION
-hopscope run --n 10               # ensemble, CIR/ESR
+hopscope run --n 10               # ensemble, CIR/ESR/EXR and exploratory λ
+hopscope matrix --n 10            # scenario × attenuation matrix
+hopscope report --out reports     # runs.jsonl, hopscope.sarif, report.html
 ```
 
 ## Scenario × attenuation matrix
@@ -59,6 +63,31 @@ poisoned-card        A2     1.00  0.00  0.00
 CIR counts attempts; EXR counts runs in which a candidate call actually executed. Attenuation does not stop
 the attempt, it stops the effect. A1 fails against a compromised hop because the mandate is still a claim;
 A2 holds because the executor acts only on a token addressed to it.
+
+## Reports
+
+`hopscope report --out reports` runs the full matrix and writes three files:
+
+| File | Content |
+|---|---|
+| `runs.jsonl` | one record per run (`hopscope.run/v1`): hops with held/requested/granted/excess and tool events with gate rulings; no tool arguments or results |
+| `hopscope.sarif` | SARIF 2.1.0 findings with logical locations `scenario/level/run/agent` |
+| `report.html` | self-contained report: matrix, per-cell λ, one trace per cell |
+
+| Rule | Level | Finding |
+|---|---|---|
+| `HSC001` | error | out-of-mandate call executed inside the executor's capability set |
+| `HSC002` | warning | out-of-mandate call blocked by attenuation |
+| `HSC003` | note | call outside the executor's capability set (escalation, never executed) |
+| `HSC004` | warning | delegation granted beyond what the sender held |
+
+The same in a sealed container (no network, read-only root, all capabilities dropped, non-root):
+
+```bash
+mkdir -p reports && HOST_UID=$(id -u) HOST_GID=$(id -g) docker compose run --rm range
+```
+
+External A2A targets are scaffolded and local-only by default: see [docs/targets.md](docs/targets.md).
 
 ## Exploratory metrics (not pre-registered)
 
