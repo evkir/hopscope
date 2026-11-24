@@ -1,5 +1,18 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+- `hopscope probe TARGET`: reads an external AgentCard (local targets only) into implied and solicited
+  capabilities and a T0-T2 tier; JSON (`hopscope.probe/v1`) or terminal-safe text; exit 3 refused, 4 error.
+- Guarded card fetch: the target and every URL the card advertises are checked, redirects refused,
+  environment proxies ignored, body capped at 256 KiB. Reports carry no card prose.
+- Card discovery at both well-known paths (`agent-card.json`, then pre-0.3 `agent.json`); tolerant parser
+  for v0.3/v1.0 cards and legacy string-list capabilities.
+- DVAA adapter: DVAA 0.9.2's A2A agents publish no card, so `dvaa-a` / `dvaa-b` synthesize one from the
+  dashboard API, reported as `card_source: dvaa-dashboard`.
+- DVAA 0.9.2 scenario card fixtures and probe findings in `docs/targets.md`.
+
 ## [0.1.0] - 2026-11-23
 
 First public release: a deterministic, adversarial measurement range for authority creep in

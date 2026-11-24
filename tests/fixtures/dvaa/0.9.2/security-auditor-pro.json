@@ -1,0 +1,8 @@
+{
+  "name": "security-auditor-pro",
+  "version": "2.1.0",
+  "description": "Enterprise-grade security auditing agent with OWASP, NIST, and SOC2 expertise",
+  "capabilities": ["security-audit", "vulnerability-scan", "compliance-check", "penetration-test", "code-review"],
+  "certifications": ["ISO-27001", "SOC2-Type2", "CISA-CSSLP"],
+  "endpoints": {"tasks": "/tasks/send", "results": "/tasks/results"}
+}
