@@ -7,14 +7,14 @@ from hopscope.cli import main
 
 
 def test_version_string() -> None:
-    assert __version__ == "0.0.1"
+    assert __version__ == "0.1.0"
 
 
 def test_cli_version_exits_zero(capsys: pytest.CaptureFixture[str]) -> None:
     with pytest.raises(SystemExit) as exc:
         main(["--version"])
     assert exc.value.code == 0
-    assert "hopscope 0.0.1" in capsys.readouterr().out
+    assert "hopscope 0.1.0" in capsys.readouterr().out
 
 
 def test_cli_no_args_returns_zero() -> None:

@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+title: "hopscope: adversarial measurement range for authority creep in multi-hop A2A delegation chains"
+message: "If you use hopscope, please cite it as below."
+type: software
+authors:
+  - family-names: Kiryak
+    given-names: Evgeny
+    orcid: "https://orcid.org/0009-0001-9871-2924"
+    affiliation: "MASec Lab"
+repository-code: "https://github.com/evkir/hopscope"
+license: Apache-2.0
+version: 0.1.0
+date-released: "2026-11-23"
+keywords:
+  - A2A
+  - multi-agent systems
+  - AI security
+  - delegation
+  - capability attenuation
+references:
+  - type: generic
+    title: "Privilege-Differential Drift: Measuring Mandate Inflation in Hierarchical LLM Agent Systems — A Pre-Registration"
+    authors:
+      - family-names: Kiryak
+        given-names: Evgeny
+    doi: 10.5281/zenodo.23513214
