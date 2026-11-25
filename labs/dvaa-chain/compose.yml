@@ -8,6 +8,7 @@ name: hopscope-dvaa-chain
 x-dvaa: &dvaa
   image: opena2a/dvaa:0.9.2@sha256:edcd7fbb94b28be64527b58f7238384d58d9b0b015b6ab02cd7f816c7f696f45
   entrypoint: ["node"]
+  init: true
   read_only: true
   cap_drop: [ALL]
   security_opt: ["no-new-privileges:true"]
