@@ -1,0 +1,1 @@
+{"ts":"2026-11-25T07:22:42.868Z","hop":"manager.in","role":"tap","path":"/tasks/send","body":{"id":"orch-1795591362796","from":"orchestrator","type":"financial-analysis","payload":{"quarter":"Q1"},"permissions":["read-only"],"context":"Analyze Q1 financial data and generate summary report"}}

@@ -1,0 +1,66 @@
+# hopscope lab: DVAA 0.9.2 a2a-trust-chain-poisoning with instrumented edges.
+#   orchestrator -> manager-tap (alias "manager") -> dvaa-manager -> worker-sink (alias "worker")
+# DVAA hardcodes http://manager:3131 and http://worker:3132, aliases satisfy that unchanged.
+# Only orchestrator is published, on loopback. Network "chain" is internal: no route out.
+# Run: HOPSCOPE_UID=$(id -u) HOPSCOPE_GID=$(id -g) docker compose up -d
+name: hopscope-dvaa-chain
+
+x-dvaa: &dvaa
+  image: opena2a/dvaa:0.9.2@sha256:edcd7fbb94b28be64527b58f7238384d58d9b0b015b6ab02cd7f816c7f696f45
+  entrypoint: ["node"]
+  init: true
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
+  mem_limit: 256m
+  pids_limit: 128
+  restart: "no"
+
+x-recorder: &recorder
+  <<: *dvaa
+  user: "${HOPSCOPE_UID:-1000}:${HOPSCOPE_GID:-1000}"
+  command: ["/lab/recorder.js"]
+  volumes:
+    - ./recorder.js:/lab/recorder.js:ro
+    - ./out:/out
+
+services:
+  orchestrator:
+    <<: *dvaa
+    command: ["/app/scenarios/a2a-trust-chain-poisoning/vulnerable/orchestrator.js"]
+    ports: ["127.0.0.1:3130:3130"]
+    networks: [edge, chain]
+    depends_on: [manager-tap]
+
+  manager-tap:
+    <<: *recorder
+    environment:
+      ROLE: tap
+      HOP: manager.in
+      PORT: "3131"
+      UPSTREAM: http://dvaa-manager:3131
+    networks:
+      chain:
+        aliases: [manager]
+    depends_on: [dvaa-manager]
+
+  dvaa-manager:
+    <<: *dvaa
+    command: ["/app/scenarios/a2a-trust-chain-poisoning/vulnerable/manager.js"]
+    networks: [chain]
+    depends_on: [worker-sink]
+
+  worker-sink:
+    <<: *recorder
+    environment:
+      ROLE: sink
+      HOP: manager.out
+      PORT: "3132"
+    networks:
+      chain:
+        aliases: [worker]
+
+networks:
+  edge: {}
+  chain:
+    internal: true
