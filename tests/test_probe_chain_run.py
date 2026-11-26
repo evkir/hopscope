@@ -69,3 +69,11 @@ def test_remote_entry_point_is_refused_before_any_request(tmp_path):
 
     with pytest.raises(TargetRefused):
         probe_chain("http://example.com/analyze", "manager", tmp_path, transport=httpx.MockTransport(boom), wait=0)
+
+
+def test_transport_error_names_the_entry_point(tmp_path):
+    def refuse(request):
+        raise httpx.ConnectError("[Errno 111] Connection refused", request=request)
+
+    with pytest.raises(ChainError, match=r"127\.0\.0\.1:3130/analyze: \[Errno 111\]"):
+        probe_chain(URL, "manager", tmp_path, transport=httpx.MockTransport(refuse), wait=0)

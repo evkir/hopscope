@@ -42,8 +42,11 @@ def probe_chain(
     check_target(url, allow_remote=allow_remote)
     inbound, outbound = records / f"{hop}.in.jsonl", records / f"{hop}.out.jsonl"
     seen = {_task_id(b) for b in _bodies(inbound) + _bodies(outbound)}
-    with httpx.Client(transport=transport, follow_redirects=False, trust_env=False, timeout=timeout) as client:
-        resp = client.post(url, json=DEFAULT_PAYLOAD if payload is None else payload)
+    try:
+        with httpx.Client(transport=transport, follow_redirects=False, trust_env=False, timeout=timeout) as client:
+            resp = client.post(url, json=DEFAULT_PAYLOAD if payload is None else payload)
+    except httpx.TransportError as exc:
+        raise ChainError(f"{url}: {exc}") from exc
     if not resp.is_success:
         raise ChainError(f"{url} answered HTTP {resp.status_code}")
     deadline = time.monotonic() + wait
