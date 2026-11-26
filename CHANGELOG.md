@@ -12,6 +12,17 @@
 - DVAA adapter: DVAA 0.9.2's A2A agents publish no card, so `dvaa-a` / `dvaa-b` synthesize one from the
   dashboard API, reported as `card_source: dvaa-dashboard`.
 - DVAA 0.9.2 scenario card fixtures and probe findings in `docs/targets.md`.
+- `labs/dvaa-chain`: DVAA 0.9.2 orchestrator -> manager -> worker under docker compose, published on
+  127.0.0.1 only (internal chain network, read-only, all capabilities dropped), with a recorder tap
+  before the manager and a sink after it that never follows task context. No DVAA code is copied.
+- Chain reading (`hopscope.probe.chain/v1`): per hop, the excess handed on beyond what the hop held,
+  added out-of-vocabulary permissions, rewritten origin, appended or rewritten context (length and a
+  short sha256 only, never the text) and hidden `_` fields.
+- `hopscope probe dvaa-chain [--json] [--sarif FILE] [--records DIR]`: one POST to the lab, then only
+  hops recorded after that POST are read; HSC004 SARIF for escalated hops; `--sarif` on a card target
+  exits 2.
+- `dvaa` pytest marker (deselected by default, `pytest -m dvaa`): brings the lab up and asserts HSC004
+  on the manager edge. The test network guard gives dvaa-marked tests loopback only.
 
 ## [0.1.0] - 2026-11-23
 

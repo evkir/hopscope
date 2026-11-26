@@ -33,8 +33,11 @@ packages = ["src/hopscope"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-ra --strict-markers -m 'not live'"
-markers = ["live: needs real network / Ollama; excluded by default"]
+addopts = "-ra --strict-markers -m 'not live and not dvaa'"
+markers = [
+    "live: needs real network / Ollama; excluded by default",
+    "dvaa: brings up labs/dvaa-chain with docker compose; excluded by default (pytest -m dvaa)",
+]
 
 [tool.ruff]
 line-length = 120

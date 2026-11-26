@@ -24,6 +24,8 @@ class Target:
     notes: str = ""
     #: DVAA agent id: the card is synthesized from the dashboard's /agents API (no published card).
     dvaa_agent: str = ""
+    #: Recorded hop of a chain lab: the CLI POSTs ``card_url`` once and reads ``<hop>.in/.out.jsonl``.
+    chain_hop: str = ""
 
 
 def check_target(url: str, *, allow_remote: bool = False) -> str:
@@ -46,4 +48,10 @@ def check_target(url: str, *, allow_remote: bool = False) -> str:
 KNOWN_LOCAL_TARGETS: tuple[Target, ...] = (
     Target("dvaa-a", "http://127.0.0.1:9000/agents", "DVAA Orchestrator (:7020), run locally", "orchestrator"),
     Target("dvaa-b", "http://127.0.0.1:9000/agents", "DVAA Worker Agent (:7021), run locally", "worker-1"),
+    Target(
+        "dvaa-chain",
+        "http://127.0.0.1:3130/analyze",
+        "labs/dvaa-chain: orchestrator -> manager (tapped) -> worker sink",
+        chain_hop="manager",
+    ),
 )
