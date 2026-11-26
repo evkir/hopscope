@@ -49,6 +49,46 @@ def _live(args: argparse.Namespace) -> int:
 #: Test hook: an httpx transport for ``probe`` (None means real HTTP to the checked target).
 _PROBE_TRANSPORT: Any = None
 
+#: Test hook: seconds to wait for a chain lab's records after the POST.
+_CHAIN_WAIT: float = 5.0
+
+
+def _default_records() -> str:
+    from pathlib import Path
+
+    return str(Path(__file__).resolve().parents[2] / "labs" / "dvaa-chain" / "out")
+
+
+def _probe_chain(args: argparse.Namespace, target: Any) -> int:
+    import json
+    from pathlib import Path
+
+    import httpx
+
+    from hopscope.probe.chain_run import ChainError, probe_chain
+    from hopscope.probe.report import edge_to_dict, format_edge
+    from hopscope.targets import TargetRefused
+
+    records = Path(args.records or _default_records())
+    try:
+        edges = probe_chain(
+            target.card_url,
+            target.chain_hop,
+            records,
+            allow_remote=args.allow_remote,
+            transport=_PROBE_TRANSPORT,
+            wait=_CHAIN_WAIT,
+        )
+    except TargetRefused as exc:
+        print(f"refused: {exc}", file=sys.stderr)
+        return 3
+    except (ChainError, ValueError, OSError, httpx.HTTPError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 4
+    dicts = [edge_to_dict(e, target=target.name) for e in edges]
+    print(json.dumps(dicts, indent=2) if args.json else "\n".join(format_edge(d) for d in dicts))
+    return 0
+
 
 def _probe(args: argparse.Namespace) -> int:
     import json
@@ -63,6 +103,8 @@ def _probe(args: argparse.Namespace) -> int:
     from hopscope.targets import KNOWN_LOCAL_TARGETS, TargetRefused
 
     known = {t.name: t for t in KNOWN_LOCAL_TARGETS}.get(args.target)
+    if known is not None and known.chain_hop:
+        return _probe_chain(args, known)
     try:
         if known is not None and known.dvaa_agent:
             card = fetch_dvaa_card(known.dvaa_agent, dashboard=known.card_url, transport=_PROBE_TRANSPORT)
@@ -101,9 +143,10 @@ def main(argv: list[str] | None = None) -> int:
     report.add_argument("--out", default="reports")
     _base(report)
     probe = sub.add_parser("probe", help="read an external AgentCard into capabilities and a T0-T2 tier (local only)")
-    probe.add_argument("target", help="AgentCard URL (.json), agent base URL, or a known local target (dvaa-a, dvaa-b)")
+    probe.add_argument("target", help="AgentCard URL (.json), agent base URL, or a known local target (dvaa-a, dvaa-b, dvaa-chain)")
     probe.add_argument("--allow-remote", action="store_true", help="only for systems you are authorised to test")
-    probe.add_argument("--json", action="store_true", help="print hopscope.probe/v1 JSON")
+    probe.add_argument("--json", action="store_true", help="print hopscope.probe/v1 JSON (chain: list of chain/v1)")
+    probe.add_argument("--records", default=None, help="chain targets: recorder out/ dir (default: repo lab)")
     args = parser.parse_args(argv)
     if args.command is None:
         parser.print_help()
