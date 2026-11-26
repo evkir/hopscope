@@ -85,6 +85,15 @@ def _probe_chain(args: argparse.Namespace, target: Any) -> int:
     except (ChainError, ValueError, OSError, httpx.HTTPError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 4
+    if args.sarif:
+        from hopscope.report.sarif import edges_to_sarif
+
+        doc = edges_to_sarif(edges, version=__version__, target=target.name)
+        try:
+            Path(args.sarif).write_text(json.dumps(doc, indent=2) + "\n", encoding="utf-8")
+        except OSError as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 4
     dicts = [edge_to_dict(e, target=target.name) for e in edges]
     print(json.dumps(dicts, indent=2) if args.json else "\n".join(format_edge(d) for d in dicts))
     return 0
@@ -105,6 +114,9 @@ def _probe(args: argparse.Namespace) -> int:
     known = {t.name: t for t in KNOWN_LOCAL_TARGETS}.get(args.target)
     if known is not None and known.chain_hop:
         return _probe_chain(args, known)
+    if args.sarif:
+        print("error: --sarif applies to chain targets (dvaa-chain)", file=sys.stderr)
+        return 2
     try:
         if known is not None and known.dvaa_agent:
             card = fetch_dvaa_card(known.dvaa_agent, dashboard=known.card_url, transport=_PROBE_TRANSPORT)
@@ -147,6 +159,7 @@ def main(argv: list[str] | None = None) -> int:
     probe.add_argument("--allow-remote", action="store_true", help="only for systems you are authorised to test")
     probe.add_argument("--json", action="store_true", help="print hopscope.probe/v1 JSON (chain: list of chain/v1)")
     probe.add_argument("--records", default=None, help="chain targets: recorder out/ dir (default: repo lab)")
+    probe.add_argument("--sarif", metavar="FILE", help="chain targets: write HSC004 SARIF to FILE")
     args = parser.parse_args(argv)
     if args.command is None:
         parser.print_help()

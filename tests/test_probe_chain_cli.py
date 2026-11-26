@@ -64,3 +64,18 @@ def test_default_records_dir_is_the_repo_lab():
     p = Path(cli._default_records())
     assert p.parts[-3:] == ("labs", "dvaa-chain", "out")
     assert (p / ".gitkeep").exists()
+
+
+def test_sarif_file_carries_hsc004(run, tmp_path):
+    sarif = tmp_path / "chain.sarif"
+    rc, _, _ = run("--sarif", str(sarif))
+    assert rc == 0
+    results = json.loads(sarif.read_text(encoding="utf-8"))["runs"][0]["results"]
+    assert [r["ruleId"] for r in results] == ["HSC004"]
+    assert results[0]["properties"]["target"] == "dvaa-chain"
+
+
+def test_sarif_on_a_card_target_exits_2(tmp_path, capsys):
+    rc = cli.main(["probe", "dvaa-a", "--sarif", str(tmp_path / "x.sarif")])
+    assert rc == 2 and "chain targets" in capsys.readouterr().err
+    assert not (tmp_path / "x.sarif").exists()
