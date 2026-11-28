@@ -52,3 +52,12 @@ def test_target_controlled_strings_are_sanitised():
     (r,) = edges_to_sarif([e], version="x", target="t")["runs"][0]["results"]
     assert "\x1b" not in r["message"]["text"]
     assert "\x1b" not in r["properties"]["task_id"]
+
+
+def test_tampered_edge_without_gain_emits_hsc005():
+    e = read_edge("h", BASE, {**BASE, "from": "x"})
+    (r,) = edges_to_sarif([e], version="x", target="t")["runs"][0]["results"]
+    assert (r["ruleId"], r["level"]) == ("HSC005", "note")
+    assert r["message"]["text"] == "h tampered with the delegation (origin_rewritten) without privilege gain (task t1)"
+    p = r["properties"]
+    assert p["excess"] == [] and p["origin_rewritten"] and (p["held_tier"], p["granted_tier"]) == ("T0", "T0")
