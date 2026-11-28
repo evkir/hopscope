@@ -80,6 +80,7 @@ A2 holds because the executor acts only on a token addressed to it.
 | `HSC002` | warning | out-of-mandate call blocked by attenuation |
 | `HSC003` | note | call outside the executor's capability set (escalation, never executed) |
 | `HSC004` | warning | delegation granted beyond what the sender held |
+| `HSC005` | note | delegation edge tampered without privilege gain (origin, context or hidden fields) |
 
 The same in a sealed container (no network, read-only root, all capabilities dropped, non-root):
 

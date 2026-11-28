@@ -79,3 +79,9 @@ the orchestrator's own view shows no escalation: the wire records are the ground
 `network-access` maps to `net:fetch:*` plus `net:post:*` rather than `net:*:*`, because a wildcard action
 is a grant template and has no tier. `execute` has no capability in the range's vocabulary and is kept
 as the out-of-vocabulary label `exec`, the same label the grammar uses for cards.
+
+HSC005 (`DelegationTampering`, level note) covers the rest of the edge: a hop that tampers with the
+task (origin, context, hidden `_` fields) while handing on no more authority than it held. The two
+rules are exclusive per edge: any excess or added out-of-vocabulary permission makes it HSC004, with
+the tampering flags kept in `properties`. The DVAA manager edge escalates, so it reads as HSC004 only;
+HSC005 is exercised on synthetic edges in `tests/test_probe_chain_sarif.py`.

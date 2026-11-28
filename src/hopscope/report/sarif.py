@@ -36,6 +36,12 @@ RULES: tuple[dict[str, Any], ...] = (
         "shortDescription": {"text": "Delegation granted beyond what the sender held"},
         "defaultConfiguration": {"level": "warning"},
     },
+    {
+        "id": "HSC005",
+        "name": "DelegationTampering",
+        "shortDescription": {"text": "Delegation edge tampered without privilege gain"},
+        "defaultConfiguration": {"level": "note"},
+    },
 )
 LEVELS: dict[str, str] = {r["id"]: r["defaultConfiguration"]["level"] for r in RULES}
 
@@ -102,18 +108,34 @@ def _tier(t: int | None) -> str | None:
     return None if t is None else f"T{t}"
 
 
+def _tampering(e: EdgeReading) -> list[str]:
+    flags = [n for n, on in (
+        ("origin_rewritten", e.origin_rewritten),
+        ("context_appended", e.context_appended),
+        ("context_rewritten", e.context_rewritten),
+    ) if on]
+    return [*flags, "hidden_fields"] if e.hidden_fields else flags
+
+
 def edges_to_sarif(edges: Sequence[EdgeReading], *, version: str, target: str) -> dict[str, Any]:
-    """HSC004 for recorded hops of an external target: same rule and orientation as the range."""
+    """Recorded hops of an external target: HSC004 when the hop escalated, HSC005 when it only tampered.
+
+    Same orientation as the range; the two rules are exclusive per edge (``escalated`` decides)."""
     results: list[dict[str, Any]] = []
     for e in edges:
-        if not e.escalated:
+        if not e.poisoned:
             continue
         granted = sorted(str(c) for c in e.excess) + [f"oov:{o}" for o in e.oov_added]
         hop, task = _printable(e.hop), _printable(e.task_id)
+        if e.escalated:
+            rule, text = "HSC004", f"{hop} delegated {', '.join(granted)} beyond what it held (task {task})"
+        else:
+            flags = ", ".join(_tampering(e))
+            rule, text = "HSC005", f"{hop} tampered with the delegation ({flags}) without privilege gain (task {task})"
         results.append({
-            "ruleId": "HSC004",
-            "level": LEVELS["HSC004"],
-            "message": {"text": f"{hop} delegated {', '.join(granted)} beyond what it held (task {task})"},
+            "ruleId": rule,
+            "level": LEVELS[rule],
+            "message": {"text": text},
             "locations": [{
                 "logicalLocations": [{
                     "name": hop,

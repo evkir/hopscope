@@ -23,6 +23,10 @@
   exits 2.
 - `dvaa` pytest marker (deselected by default, `pytest -m dvaa`): brings the lab up and asserts HSC004
   on the manager edge. The test network guard gives dvaa-marked tests loopback only.
+- HSC005 `DelegationTampering` (note): a recorded hop that rewrote the origin, appended or rewrote
+  context, or added hidden `_` fields while handing on no excess and no out-of-vocabulary permission.
+  Exclusive with HSC004 per edge (escalation decides); emitted by `probe dvaa-chain --sarif` only, the
+  range matrix does not produce it.
 
 ## [0.1.0] - 2026-11-23
 

@@ -1,6 +1,8 @@
 import json
 from pathlib import Path
 
+import pytest
+
 from hopscope.probe.chain import read_edge, read_records
 from hopscope.report.sarif import RULES, edges_to_sarif
 
@@ -52,3 +54,44 @@ def test_target_controlled_strings_are_sanitised():
     (r,) = edges_to_sarif([e], version="x", target="t")["runs"][0]["results"]
     assert "\x1b" not in r["message"]["text"]
     assert "\x1b" not in r["properties"]["task_id"]
+
+
+def test_tampered_edge_without_gain_emits_hsc005():
+    e = read_edge("h", BASE, {**BASE, "from": "x"})
+    (r,) = edges_to_sarif([e], version="x", target="t")["runs"][0]["results"]
+    assert (r["ruleId"], r["level"]) == ("HSC005", "note")
+    assert r["message"]["text"] == "h tampered with the delegation (origin_rewritten) without privilege gain (task t1)"
+    p = r["properties"]
+    assert p["excess"] == [] and p["origin_rewritten"] and (p["held_tier"], p["granted_tier"]) == ("T0", "T0")
+
+
+@pytest.mark.parametrize(("out", "flags"), [
+    ({"from": "x"}, ["origin_rewritten"]),
+    ({"context": "c more"}, ["context_appended"]),
+    ({"context": "z"}, ["context_rewritten"]),
+    ({"_x": 1}, ["hidden_fields"]),
+    ({"from": "x", "context": "z", "_x": 1}, ["origin_rewritten", "context_rewritten", "hidden_fields"]),
+])
+def test_hsc005_names_each_tampering_flag(out, flags):
+    e = read_edge("h", BASE, {**BASE, **out})
+    (r,) = edges_to_sarif([e], version="x", target="t")["runs"][0]["results"]
+    assert r["ruleId"] == "HSC005"
+    assert f"({', '.join(flags)})" in r["message"]["text"]
+    p = r["properties"]
+    assert [k for k in ("origin_rewritten", "context_appended", "context_rewritten") if p[k]] == [
+        f for f in flags if f != "hidden_fields"
+    ]
+    assert p["hidden_fields"] == (["_x"] if "hidden_fields" in flags else [])
+
+
+ESCALATE = ({}, {"permissions": ["read-write"]}, {"permissions": ["read-only", "execute"]})
+TAMPER = ({}, {"from": "x"}, {"context": "c more"}, {"context": "z"}, {"_x": 1})
+
+
+@pytest.mark.parametrize("tam", TAMPER)
+@pytest.mark.parametrize("esc", ESCALATE)
+def test_hsc004_and_hsc005_are_exclusive_per_edge(esc, tam):
+    e = read_edge("h", BASE, {**BASE, **esc, **tam})
+    assert e.escalated == bool(esc)
+    rules = [r["ruleId"] for r in edges_to_sarif([e], version="x", target="t")["runs"][0]["results"]]
+    assert rules == (["HSC004"] if esc else ["HSC005"] if tam else [])
