@@ -36,6 +36,12 @@ RULES: tuple[dict[str, Any], ...] = (
         "shortDescription": {"text": "Delegation granted beyond what the sender held"},
         "defaultConfiguration": {"level": "warning"},
     },
+    {
+        "id": "HSC005",
+        "name": "DelegationTampering",
+        "shortDescription": {"text": "Delegation edge tampered without privilege gain"},
+        "defaultConfiguration": {"level": "note"},
+    },
 )
 LEVELS: dict[str, str] = {r["id"]: r["defaultConfiguration"]["level"] for r in RULES}
 
