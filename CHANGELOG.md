@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-28
+
+External targets: the range now reads real A2A agents. A card probe places a target on the T0-T2
+scale; a recorded DVAA 0.9.2 chain lab shows the manager edge escalating T0 -> T2 on the wire
+(HSC004), and HSC005 covers edges tampered without privilege gain.
+
 ### Added
 - `hopscope probe TARGET`: reads an external AgentCard (local targets only) into implied and solicited
   capabilities and a T0-T2 tier; JSON (`hopscope.probe/v1`) or terminal-safe text; exit 3 refused, 4 error.

@@ -9,8 +9,8 @@ authors:
     affiliation: "MASec Lab"
 repository-code: "https://github.com/evkir/hopscope"
 license: Apache-2.0
-version: 0.1.0
-date-released: "2026-11-23"
+version: 0.2.0
+date-released: "2026-11-28"
 keywords:
   - A2A
   - multi-agent systems
