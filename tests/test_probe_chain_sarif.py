@@ -1,6 +1,8 @@
 import json
 from pathlib import Path
 
+import pytest
+
 from hopscope.probe.chain import read_edge, read_records
 from hopscope.report.sarif import RULES, edges_to_sarif
 
@@ -61,3 +63,22 @@ def test_tampered_edge_without_gain_emits_hsc005():
     assert r["message"]["text"] == "h tampered with the delegation (origin_rewritten) without privilege gain (task t1)"
     p = r["properties"]
     assert p["excess"] == [] and p["origin_rewritten"] and (p["held_tier"], p["granted_tier"]) == ("T0", "T0")
+
+
+@pytest.mark.parametrize(("out", "flags"), [
+    ({"from": "x"}, ["origin_rewritten"]),
+    ({"context": "c more"}, ["context_appended"]),
+    ({"context": "z"}, ["context_rewritten"]),
+    ({"_x": 1}, ["hidden_fields"]),
+    ({"from": "x", "context": "z", "_x": 1}, ["origin_rewritten", "context_rewritten", "hidden_fields"]),
+])
+def test_hsc005_names_each_tampering_flag(out, flags):
+    e = read_edge("h", BASE, {**BASE, **out})
+    (r,) = edges_to_sarif([e], version="x", target="t")["runs"][0]["results"]
+    assert r["ruleId"] == "HSC005"
+    assert f"({', '.join(flags)})" in r["message"]["text"]
+    p = r["properties"]
+    assert [k for k in ("origin_rewritten", "context_appended", "context_rewritten") if p[k]] == [
+        f for f in flags if f != "hidden_fields"
+    ]
+    assert p["hidden_fields"] == (["_x"] if "hidden_fields" in flags else [])
