@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def test_versions_agree() -> None:
     pyproject = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
-    assert pyproject["project"]["version"] == __version__ == "0.1.0"
+    assert pyproject["project"]["version"] == __version__ == "0.2.0"
 
 
 def test_citation_and_changelog_carry_the_version() -> None:
