@@ -82,3 +82,16 @@ def test_hsc005_names_each_tampering_flag(out, flags):
         f for f in flags if f != "hidden_fields"
     ]
     assert p["hidden_fields"] == (["_x"] if "hidden_fields" in flags else [])
+
+
+ESCALATE = ({}, {"permissions": ["read-write"]}, {"permissions": ["read-only", "execute"]})
+TAMPER = ({}, {"from": "x"}, {"context": "c more"}, {"context": "z"}, {"_x": 1})
+
+
+@pytest.mark.parametrize("tam", TAMPER)
+@pytest.mark.parametrize("esc", ESCALATE)
+def test_hsc004_and_hsc005_are_exclusive_per_edge(esc, tam):
+    e = read_edge("h", BASE, {**BASE, **esc, **tam})
+    assert e.escalated == bool(esc)
+    rules = [r["ruleId"] for r in edges_to_sarif([e], version="x", target="t")["runs"][0]["results"]]
+    assert rules == (["HSC004"] if esc else ["HSC005"] if tam else [])
