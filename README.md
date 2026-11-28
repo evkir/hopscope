@@ -114,6 +114,25 @@ coordinates, shipped sampling parameters, `truncate`/`shift` off. The command ex
 
 Maps to OWASP Top 10 for Agentic Applications: ASI03, ASI07, ASI08.
 
+## How hopscope relates to other benchmarks
+
+hopscope measures one thing: what authority crosses a delegation edge. For each hop it compares the
+task as it arrived with the task as it was forwarded (held vs granted permissions on the T0-T2 scale,
+excess capabilities, added out-of-vocabulary permissions, rewritten origin or context, hidden fields),
+read from records on the wire rather than from an LLM judge. The range is deterministic; live mode
+only changes who produces the edges.
+
+- [OASB](https://github.com/opena2a-org/open-agent-security-benchmark) (OpenA2A) scores security
+  products: whether a runtime protection detects a fixed set of scripted attacks. Its A2A coverage is
+  message scanning. hopscope scores the chain itself, with no product in the loop.
+- [A2ASecBench](https://safo-lab.github.io/A2ASecBench/) (ICLR 2026) attacks A2A protocol mechanics
+  (AgentCard spoofing, capability cloaking, task flooding, agent-side request forgery, artifact script
+  injection) and reports a safety-utility trade-off. hopscope mounts none of these; it measures how much
+  authority a hop hands on, whatever caused it.
+
+They compose: an attack scenario (A2ASecBench-style, or a DVAA lab) drives the chain, hopscope reads
+the edge, and OASB asks whether a guard noticed.
+
 ## License
 
 Apache-2.0
